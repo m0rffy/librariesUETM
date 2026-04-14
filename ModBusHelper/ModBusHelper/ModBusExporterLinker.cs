@@ -12,6 +12,7 @@ using System.Net.Sockets;
 using System.Resources;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using static ModBusHelper.ModBusExporterLinker;
 using static ModBusHelper.ModBusProfile;
 
@@ -22,6 +23,7 @@ namespace ModBusHelper
     {
         private ModBusFunctions ModbusFunctionsHelper = new ModBusFunctions();
         private ModBusProfile ModBusProfileHelper = new ModBusProfile();
+        public bool WasRebootCommandSent { get; private set; }
 
         // ========================== ТЕКСТОВЫЕ СТРУКТУРЫ ==========================
 
@@ -364,13 +366,59 @@ namespace ModBusHelper
 
         public void WriteSettings(GeneralSettings_TextFormat txt, bool AdminRights, Tuple<TcpClient, IModbusMaster> connection)
         {
-            ModBusProfileHelper.cmns_Write(connection.Item2, txt, AdminRights);
-            ModBusProfileHelper.meas_Write(connection.Item2, txt, AdminRights);
-            ModBusProfileHelper.syns_Write(connection.Item2, txt, AdminRights);
-            ModBusProfileHelper.time_Write(connection.Item2, txt, AdminRights);
-            ModBusProfileHelper.nets_Write(connection.Item2, txt, AdminRights);
-            ModBusProfileHelper.swrcs_Write(connection.Item2, txt, AdminRights);
-            ModBusProfileHelper.accor_Write(connection.Item2, txt, AdminRights);
+            if (!AdminRights) return;
+            if (connection?.Item1?.Connected != true) return;
+
+            var master = connection.Item2;
+            WasRebootCommandSent = false;
+
+            try
+            {
+                // 1. Запись всех групп настроек в Modbus-буфер устройства
+                ModBusProfileHelper.cmns_Write(master, txt, AdminRights);
+                ModBusProfileHelper.meas_Write(master, txt, AdminRights);
+                ModBusProfileHelper.syns_Write(master, txt, AdminRights);
+                ModBusProfileHelper.time_Write(master, txt, AdminRights);
+                ModBusProfileHelper.nets_Write(master, txt, AdminRights);
+                ModBusProfileHelper.swrcs_Write(master, txt, AdminRights);
+                ModBusProfileHelper.accor_Write(master, txt, AdminRights);
+            }
+            catch (Exception ex)
+            {
+                // Игнорируем ошибки соединения, если они возникли при записи регистров
+                // (устройство могло уже разорвать соединение)
+                if (!IsConnectionError(ex))
+                    throw;
+            }
+
+            try
+            {
+                // 2. Запуск сохранения во Flash с последующей перезагрузкой (флаг 0x0100)
+                ModBusCommands commands = new ModBusCommands();
+                var response = commands.upload_settings(master, 0x0100);
+
+                // Устройство может ответить 0x00FF перед разрывом соединения
+                if (response?.Data[0] == 0xFF || response?.Data[0] == 0x00)
+                {
+                    WasRebootCommandSent = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                // Если возникла ошибка соединения, считаем, что команда всё же отправлена
+                if (IsConnectionError(ex))
+                    WasRebootCommandSent = true;
+                else
+                    throw;
+            }
+        }
+        private bool IsConnectionError(Exception ex)
+        {
+            string msg = ex.Message.ToLower();
+            return msg.Contains("socket") ||
+                   msg.Contains("connection") ||
+                   msg.Contains("disconnected") ||
+                   (ex.InnerException != null && IsConnectionError(ex.InnerException));
         }
     }
 }

@@ -1,29 +1,51 @@
-﻿using NModbus.Device;
+﻿using CommonFunctions;
+using NModbus;
+using NModbus.Device;
+using NModbus.Extensions.Enron;
+using NModbus.Message;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
+using System.Globalization;
 using System.Linq;
-using System.Net.Sockets;
-using System.Text;
-using System.Threading.Tasks;
-using CommonFunctions;
 using System.Net;
 using System.Net.Http;
+using System.Net.Sockets;
 using System.Runtime.Remoting.Messaging;
-using static ModBusHelper.ModBusExporterLinker;
-using System.Globalization;
-using System.Xml.Linq;
-using NModbus.Extensions.Enron;
-using System.Diagnostics.Contracts;
-using static ModBusHelper.ModBusProfile;
 using System.Security.Cryptography;
-using NModbus.Message;
-using NModbus;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Xml.Linq;
+using static ModBusHelper.ModBusExporterLinker;
+using static ModBusHelper.ModBusProfile;
 
 namespace ModBusHelper
 {
     public class ModBusCommands
     {
         private ModBusFunctions ModbusFunctionsHelper = new ModBusFunctions();
+
+        public bool WaitForWriteComplete(IModbusMaster master, int timeoutMs = 10000)
+        {
+            ushort statusAddr = 12290; // 0x3002
+            int elapsed = 0;
+            int delay = 200;
+            while (elapsed < timeoutMs)
+            {
+                bool[] coils = master.ReadCoils(0, statusAddr, 8);
+                byte status = 0;
+                for (int i = 0; i < 8; i++)
+                    if (coils[i]) status |= (byte)(1 << i);
+
+                if (status == 0x00) // OK
+                    return true;
+
+                Thread.Sleep(delay);
+                elapsed += delay;
+            }
+            return false;
+        }
 
         public WriteSingleRegisterRequestResponse upload_firmware_default(IModbusMaster Master, ushort bit_mask)
         {

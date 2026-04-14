@@ -102,3 +102,15 @@ C:\Users\Gultyaev_PN\Desktop\ModBusHelper 11.2024 - User Friendly(new)\ModBusHel
 C:\Users\Gultyaev_PN\Desktop\ModBusHelper 11.2024 - User Friendly(new)\ModBusHelper\obj\Debug\ModBusHe.DCE69543.Up2Date
 C:\Users\Gultyaev_PN\Desktop\ModBusHelper 11.2024 - User Friendly(new)\ModBusHelper\obj\Debug\ModBusHelper.dll
 C:\Users\Gultyaev_PN\Desktop\ModBusHelper 11.2024 - User Friendly(new)\ModBusHelper\obj\Debug\ModBusHelper.pdb
+C:\Users\Gultyaev_PN\Desktop\librariesUETM\ModBusHelper\ModBusHelper\bin\Debug\ModBusHelper.dll
+C:\Users\Gultyaev_PN\Desktop\librariesUETM\ModBusHelper\ModBusHelper\bin\Debug\ModBusHelper.pdb
+C:\Users\Gultyaev_PN\Desktop\librariesUETM\ModBusHelper\ModBusHelper\bin\Debug\CommonFunctions.dll
+C:\Users\Gultyaev_PN\Desktop\librariesUETM\ModBusHelper\ModBusHelper\bin\Debug\NModbus.dll
+C:\Users\Gultyaev_PN\Desktop\librariesUETM\ModBusHelper\ModBusHelper\bin\Debug\CommonFunctions.pdb
+C:\Users\Gultyaev_PN\Desktop\librariesUETM\ModBusHelper\ModBusHelper\bin\Debug\NModbus.pdb
+C:\Users\Gultyaev_PN\Desktop\librariesUETM\ModBusHelper\ModBusHelper\bin\Debug\NModbus.xml
+C:\Users\Gultyaev_PN\Desktop\librariesUETM\ModBusHelper\ModBusHelper\obj\Debug\ModBusHelper.csproj.AssemblyReference.cache
+C:\Users\Gultyaev_PN\Desktop\librariesUETM\ModBusHelper\ModBusHelper\obj\Debug\ModBusHelper.csproj.CoreCompileInputs.cache
+C:\Users\Gultyaev_PN\Desktop\librariesUETM\ModBusHelper\ModBusHelper\obj\Debug\ModBusHe.DCE69543.Up2Date
+C:\Users\Gultyaev_PN\Desktop\librariesUETM\ModBusHelper\ModBusHelper\obj\Debug\ModBusHelper.dll
+C:\Users\Gultyaev_PN\Desktop\librariesUETM\ModBusHelper\ModBusHelper\obj\Debug\ModBusHelper.pdb
