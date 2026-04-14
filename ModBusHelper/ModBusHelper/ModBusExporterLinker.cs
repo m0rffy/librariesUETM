@@ -1,19 +1,7 @@
-﻿using CommonFunctions;
-using ModBusHelper;
-using NModbus;
-using NModbus.Device;
-using NModbus.Extensions.Enron;
-using NModbus.Utility;
+﻿using NModbus;
 using System;
 using System.Collections.Generic;
-using System.Data.Common;
-using System.Linq;
 using System.Net.Sockets;
-using System.Resources;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-using static ModBusHelper.ModBusExporterLinker;
 using static ModBusHelper.ModBusProfile;
 
 
@@ -374,7 +362,6 @@ namespace ModBusHelper
 
             try
             {
-                // 1. Запись всех групп настроек в Modbus-буфер устройства
                 ModBusProfileHelper.cmns_Write(master, txt, AdminRights);
                 ModBusProfileHelper.meas_Write(master, txt, AdminRights);
                 ModBusProfileHelper.syns_Write(master, txt, AdminRights);
@@ -383,12 +370,15 @@ namespace ModBusHelper
                 ModBusProfileHelper.swrcs_Write(master, txt, AdminRights);
                 ModBusProfileHelper.accor_Write(master, txt, AdminRights);
             }
-            catch (Exception ex)
+            catch (Exception ex) when (IsConnectionError(ex))
             {
-                // Игнорируем ошибки соединения, если они возникли при записи регистров
-                // (устройство могло уже разорвать соединение)
-                if (!IsConnectionError(ex))
-                    throw;
+                // Соединение разорвано преждевременно — возможно, устройство уже перезагружается
+                WasRebootCommandSent = true;
+                return;
+            }
+            catch (Exception)
+            {
+                throw; // Другие ошибки пробрасываем выше
             }
 
             try
@@ -397,27 +387,27 @@ namespace ModBusHelper
                 ModBusCommands commands = new ModBusCommands();
                 var response = commands.upload_settings(master, 0x0100);
 
-                // Устройство может ответить 0x00FF перед разрывом соединения
-                if (response?.Data[0] == 0xFF || response?.Data[0] == 0x00)
+                if (response?.Data?.Count > 0 && (response.Data[0] == 0xFF || response.Data[0] == 0x00))
                 {
                     WasRebootCommandSent = true;
                 }
             }
             catch (Exception ex)
             {
-                // Если возникла ошибка соединения, считаем, что команда всё же отправлена
                 if (IsConnectionError(ex))
                     WasRebootCommandSent = true;
                 else
                     throw;
             }
         }
+
         private bool IsConnectionError(Exception ex)
         {
             string msg = ex.Message.ToLower();
             return msg.Contains("socket") ||
                    msg.Contains("connection") ||
                    msg.Contains("disconnected") ||
+                   msg.Contains("transport") ||
                    (ex.InnerException != null && IsConnectionError(ex.InnerException));
         }
     }

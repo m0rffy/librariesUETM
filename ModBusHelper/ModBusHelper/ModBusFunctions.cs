@@ -2,24 +2,21 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using NModbus.Data;
-using NModbus.Device;
-using NModbus.Utility;
-using System.Threading.Tasks;
-using System.Net.Sockets;
 using System.Net;
 using System.Globalization;
-using System.Collections;
-using System.Security.Cryptography;
-using System.ComponentModel;
 using NModbus;
-using NModbus.Extensions.Enron;
-using System.Net.Http;
 
 namespace ModBusHelper
 {
     public class ModBusFunctions
     {
+
+        public static bool ValidateStringLength(string text, int maxBytes, out int actualBytes)
+        {
+            actualBytes = Encoding.UTF8.GetByteCount(text ?? "");
+            return actualBytes <= maxBytes - 1; // -1 для нуль-терминатора
+        }
+
         public ushort[] GetReadOnlyRegisters(IModbusMaster Master, ushort StartRegister, ushort NumberOfRegistersToBeRead)
         {
             return Master.ReadInputRegisters(0, StartRegister, NumberOfRegistersToBeRead);
@@ -351,14 +348,7 @@ namespace ModBusHelper
             if (bytes == null || bytes.Length == 0) return "";
             int len = Array.IndexOf(bytes, (byte)0);
             if (len < 0) len = bytes.Length;
-            try
-            {
-                return Encoding.UTF8.GetString(bytes, 0, len);
-            }
-            catch
-            {
-                return Encoding.ASCII.GetString(bytes, 0, len);
-            }
+            return Encoding.UTF8.GetString(bytes, 0, len);
         }
 
     }

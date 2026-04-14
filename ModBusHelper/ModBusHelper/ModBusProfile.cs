@@ -1,25 +1,9 @@
-﻿using CommonFunctions;
-using NModbus;
-using NModbus.Device;
-using NModbus.Extensions.Enron;
-using NModbus.Utility;
+﻿using NModbus;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Diagnostics.Contracts;
 using System.Globalization;
 using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Net.Sockets;
-using System.Runtime.Remoting.Messaging;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-using System.Xml.Linq;
 using static ModBusHelper.ModBusExporterLinker;
-using static ModBusHelper.ModBusProfile;
 
 //byte = uint8
 //ushort = uint16
