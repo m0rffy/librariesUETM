@@ -1,6 +1,7 @@
 ﻿using NModbus;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Net.Sockets;
 using static ModBusHelper.ModBusProfile;
 
@@ -196,6 +197,10 @@ namespace ModBusHelper
 
         // ========================== МЕТОДЫ ==========================
 
+
+        public static string FormatFloatNoExponent(float value) {
+            return value.ToString("0.0###############", CultureInfo.InvariantCulture);
+        }
         public GeneralSettings ReadSettings(Tuple<TcpClient, IModbusMaster> connection)
         {
             return ModBusProfileHelper.ReadAllSettings(connection.Item2);
@@ -315,10 +320,10 @@ namespace ModBusHelper
             else txt.swrcs.swnf.model = "";
             txt.swrcs.algo.Iotc = raw.swrcs.algo.Iotc.ToString() ?? "";
             txt.swrcs.algo.Nn = raw.swrcs.algo.Nn.ToString() ?? "";
-            txt.swrcs.algo.C1 = raw.swrcs.algo.C1.ToString("R") ?? "0";
-            txt.swrcs.algo.C2 = raw.swrcs.algo.C2.ToString("R") ?? "0";
-            txt.swrcs.algo.C3 = raw.swrcs.algo.C3.ToString("R") ?? "0";
-            txt.swrcs.algo.C4 = raw.swrcs.algo.C4.ToString("R") ?? "0";
+            txt.swrcs.algo.C1 = FormatFloatNoExponent(raw.swrcs.algo.C1);
+            txt.swrcs.algo.C2 = FormatFloatNoExponent(raw.swrcs.algo.C2);
+            txt.swrcs.algo.C3 = FormatFloatNoExponent(raw.swrcs.algo.C3);
+            txt.swrcs.algo.C4 = FormatFloatNoExponent(raw.swrcs.algo.C4);
             txt.swrcs.jrnvol = raw.swrcs.jrnvol.ToString() ?? "";
             txt.swrcs.contacts.invmsk = raw.swrcs.contacts.invmsk.ToString() ?? "";
             txt.swrcs.contacts.maxdly.offd = raw.swrcs.contacts.maxdly.offd.ToString() ?? "";
