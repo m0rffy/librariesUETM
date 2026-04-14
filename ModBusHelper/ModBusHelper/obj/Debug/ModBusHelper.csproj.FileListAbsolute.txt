@@ -1,0 +1,104 @@
+C:\Programming\ModBusHelper\ModBusHelper\bin\Debug\ModBusHelper.dll
+C:\Programming\ModBusHelper\ModBusHelper\bin\Debug\ModBusHelper.pdb
+C:\Programming\ModBusHelper\ModBusHelper\bin\Debug\NModbus4.dll
+C:\Programming\ModBusHelper\ModBusHelper\bin\Debug\NModbus4.xml
+C:\Programming\ModBusHelper\ModBusHelper\obj\Debug\ModBusHelper.csproj.AssemblyReference.cache
+C:\Programming\ModBusHelper\ModBusHelper\obj\Debug\ModBusHelper.csproj.CoreCompileInputs.cache
+C:\Programming\ModBusHelper\ModBusHelper\obj\Debug\ModBusHelper.csproj.CopyComplete
+C:\Programming\ModBusHelper\ModBusHelper\obj\Debug\ModBusHelper.dll
+C:\Programming\ModBusHelper\ModBusHelper\obj\Debug\ModBusHelper.pdb
+C:\Programming\ModBusHelper\ModBusHelper\bin\Debug\CommonFunctions.dll
+C:\Programming\ModBusHelper\ModBusHelper\bin\Debug\CommonFunctions.pdb
+C:\Programming\ModBusHelper 01.2024\ModBusHelper\obj\Debug\ModBusHelper.csproj.AssemblyReference.cache
+C:\Programming\ModBusHelper 01.2024\ModBusHelper\obj\Debug\ModBusHelper.csproj.CoreCompileInputs.cache
+C:\Programming\ModBusHelper 01.2024\ModBusHelper\obj\Debug\ModBusHelper.dll
+C:\Programming\ModBusHelper 01.2024\ModBusHelper\obj\Debug\ModBusHelper.pdb
+C:\Programming\ModBusHelper 01.2024\ModBusHelper\bin\Debug\ModBusHelper.dll
+C:\Programming\ModBusHelper 01.2024\ModBusHelper\bin\Debug\ModBusHelper.pdb
+C:\Programming\ModBusHelper 01.2024\ModBusHelper\bin\Debug\CommonFunctions.dll
+C:\Programming\ModBusHelper 01.2024\ModBusHelper\bin\Debug\NModbus4.dll
+C:\Programming\ModBusHelper 01.2024\ModBusHelper\bin\Debug\CommonFunctions.pdb
+C:\Programming\ModBusHelper 01.2024\ModBusHelper\bin\Debug\NModbus4.xml
+C:\Programming\ModBusHelper 01.2024\ModBusHelper\obj\Debug\ModBusHelper.csproj.CopyComplete
+C:\Programming\ModBusHelper 03.2024 - Динамические таблицы\ModBusHelper\obj\Debug\ModBusHelper.csproj.AssemblyReference.cache
+C:\Programming\ModBusHelper 03.2024 - Динамические таблицы\ModBusHelper\obj\Debug\ModBusHelper.csproj.CoreCompileInputs.cache
+C:\Programming\ModBusHelper 03.2024 - Динамические таблицы\ModBusHelper\obj\Debug\ModBusHelper.dll
+C:\Programming\ModBusHelper 03.2024 - Динамические таблицы\ModBusHelper\obj\Debug\ModBusHelper.pdb
+C:\Programming\ModBusHelper 03.2024 - Динамические таблицы\ModBusHelper\bin\Debug\ModBusHelper.dll
+C:\Programming\ModBusHelper 03.2024 - Динамические таблицы\ModBusHelper\bin\Debug\ModBusHelper.pdb
+C:\Programming\ModBusHelper 03.2024 - Динамические таблицы\ModBusHelper\bin\Debug\CommonFunctions.dll
+C:\Programming\ModBusHelper 03.2024 - Динамические таблицы\ModBusHelper\bin\Debug\NModbus4.dll
+C:\Programming\ModBusHelper 03.2024 - Динамические таблицы\ModBusHelper\bin\Debug\CommonFunctions.pdb
+C:\Programming\ModBusHelper 03.2024 - Динамические таблицы\ModBusHelper\bin\Debug\NModbus4.xml
+C:\Programming\ModBusHelper 03.2024 - Динамические таблицы\ModBusHelper\obj\Debug\ModBusHelper.csproj.CopyComplete
+C:\Programming\ModBusHelper 04.2024 - Чтение ответа\ModBusHelper\bin\Debug\ModBusHelper.dll
+C:\Programming\ModBusHelper 04.2024 - Чтение ответа\ModBusHelper\bin\Debug\ModBusHelper.pdb
+C:\Programming\ModBusHelper 04.2024 - Чтение ответа\ModBusHelper\bin\Debug\CommonFunctions.dll
+C:\Programming\ModBusHelper 04.2024 - Чтение ответа\ModBusHelper\bin\Debug\NModbus.dll
+C:\Programming\ModBusHelper 04.2024 - Чтение ответа\ModBusHelper\bin\Debug\CommonFunctions.pdb
+C:\Programming\ModBusHelper 04.2024 - Чтение ответа\ModBusHelper\bin\Debug\NModbus.xml
+C:\Programming\ModBusHelper 04.2024 - Чтение ответа\ModBusHelper\obj\Debug\ModBusHelper.csproj.AssemblyReference.cache
+C:\Programming\ModBusHelper 04.2024 - Чтение ответа\ModBusHelper\obj\Debug\ModBusHelper.csproj.CoreCompileInputs.cache
+C:\Programming\ModBusHelper 04.2024 - Чтение ответа\ModBusHelper\obj\Debug\ModBusHelper.csproj.CopyComplete
+C:\Programming\ModBusHelper 04.2024 - Чтение ответа\ModBusHelper\obj\Debug\ModBusHelper.dll
+C:\Programming\ModBusHelper 04.2024 - Чтение ответа\ModBusHelper\obj\Debug\ModBusHelper.pdb
+C:\Programming\ModBusHelper 04.2024 - Модифицированный NModbus\ModBusHelper\obj\Debug\ModBusHelper.csproj.AssemblyReference.cache
+C:\Programming\ModBusHelper 04.2024 - Модифицированный NModbus\ModBusHelper\obj\Debug\ModBusHelper.csproj.CoreCompileInputs.cache
+C:\Programming\ModBusHelper 04.2024 - Модифицированный NModbus\ModBusHelper\obj\Debug\ModBusHelper.dll
+C:\Programming\ModBusHelper 04.2024 - Модифицированный NModbus\ModBusHelper\obj\Debug\ModBusHelper.pdb
+C:\Programming\ModBusHelper 04.2024 - Модифицированный NModbus\ModBusHelper\bin\Debug\ModBusHelper.dll
+C:\Programming\ModBusHelper 04.2024 - Модифицированный NModbus\ModBusHelper\bin\Debug\ModBusHelper.pdb
+C:\Programming\ModBusHelper 04.2024 - Модифицированный NModbus\ModBusHelper\bin\Debug\CommonFunctions.dll
+C:\Programming\ModBusHelper 04.2024 - Модифицированный NModbus\ModBusHelper\bin\Debug\CommonFunctions.pdb
+C:\Programming\ModBusHelper 04.2024 - Модифицированный NModbus\ModBusHelper\bin\Debug\NModbus.xml
+C:\Programming\ModBusHelper 04.2024 - Модифицированный NModbus\ModBusHelper\obj\Debug\ModBusHelper.csproj.CopyComplete
+C:\Programming\ModBusHelper 04.2024 - Модифицированный NModbus\ModBusHelper\bin\Debug\NModbus.dll
+C:\Programming\ModBusHelper 04.2024 - Модифицированный NModbus\ModBusHelper\bin\Debug\NModbus.pdb
+C:\Programming\ModBusHelper 11.2024 - User Friendly\ModBusHelper\bin\Debug\ModBusHelper.dll
+C:\Programming\ModBusHelper 11.2024 - User Friendly\ModBusHelper\bin\Debug\ModBusHelper.pdb
+C:\Programming\ModBusHelper 11.2024 - User Friendly\ModBusHelper\bin\Debug\CommonFunctions.dll
+C:\Programming\ModBusHelper 11.2024 - User Friendly\ModBusHelper\bin\Debug\NModbus.dll
+C:\Programming\ModBusHelper 11.2024 - User Friendly\ModBusHelper\bin\Debug\CommonFunctions.pdb
+C:\Programming\ModBusHelper 11.2024 - User Friendly\ModBusHelper\bin\Debug\NModbus.pdb
+C:\Programming\ModBusHelper 11.2024 - User Friendly\ModBusHelper\bin\Debug\NModbus.xml
+C:\Programming\ModBusHelper 11.2024 - User Friendly\ModBusHelper\obj\Debug\ModBusHelper.csproj.AssemblyReference.cache
+C:\Programming\ModBusHelper 11.2024 - User Friendly\ModBusHelper\obj\Debug\ModBusHelper.csproj.CoreCompileInputs.cache
+C:\Programming\ModBusHelper 11.2024 - User Friendly\ModBusHelper\obj\Debug\ModBusHelper.csproj.CopyComplete
+C:\Programming\ModBusHelper 11.2024 - User Friendly\ModBusHelper\obj\Debug\ModBusHelper.dll
+C:\Programming\ModBusHelper 11.2024 - User Friendly\ModBusHelper\obj\Debug\ModBusHelper.pdb
+C:\Users\Gultyaev_PN\Desktop\ModBusHelper 11.2024 - User Friendly — копия\ModBusHelper\bin\Debug\ModBusHelper.dll
+C:\Users\Gultyaev_PN\Desktop\ModBusHelper 11.2024 - User Friendly — копия\ModBusHelper\bin\Debug\ModBusHelper.pdb
+C:\Users\Gultyaev_PN\Desktop\ModBusHelper 11.2024 - User Friendly — копия\ModBusHelper\bin\Debug\CommonFunctions.dll
+C:\Users\Gultyaev_PN\Desktop\ModBusHelper 11.2024 - User Friendly — копия\ModBusHelper\bin\Debug\NModbus.dll
+C:\Users\Gultyaev_PN\Desktop\ModBusHelper 11.2024 - User Friendly — копия\ModBusHelper\bin\Debug\CommonFunctions.pdb
+C:\Users\Gultyaev_PN\Desktop\ModBusHelper 11.2024 - User Friendly — копия\ModBusHelper\bin\Debug\NModbus.pdb
+C:\Users\Gultyaev_PN\Desktop\ModBusHelper 11.2024 - User Friendly — копия\ModBusHelper\bin\Debug\NModbus.xml
+C:\Users\Gultyaev_PN\Desktop\ModBusHelper 11.2024 - User Friendly — копия\ModBusHelper\obj\Debug\ModBusHelper.csproj.AssemblyReference.cache
+C:\Users\Gultyaev_PN\Desktop\ModBusHelper 11.2024 - User Friendly — копия\ModBusHelper\obj\Debug\ModBusHelper.csproj.CoreCompileInputs.cache
+C:\Users\Gultyaev_PN\Desktop\ModBusHelper 11.2024 - User Friendly — копия\ModBusHelper\obj\Debug\ModBusHe.DCE69543.Up2Date
+C:\Users\Gultyaev_PN\Desktop\ModBusHelper 11.2024 - User Friendly — копия\ModBusHelper\obj\Debug\ModBusHelper.dll
+C:\Users\Gultyaev_PN\Desktop\ModBusHelper 11.2024 - User Friendly — копия\ModBusHelper\obj\Debug\ModBusHelper.pdb
+C:\Users\Gultyaev_PN\Desktop\ModBusHelper 11.2024 - User Friendly — переделанный\ModBusHelper\bin\Debug\ModBusHelper.dll
+C:\Users\Gultyaev_PN\Desktop\ModBusHelper 11.2024 - User Friendly — переделанный\ModBusHelper\bin\Debug\ModBusHelper.pdb
+C:\Users\Gultyaev_PN\Desktop\ModBusHelper 11.2024 - User Friendly — переделанный\ModBusHelper\bin\Debug\CommonFunctions.dll
+C:\Users\Gultyaev_PN\Desktop\ModBusHelper 11.2024 - User Friendly — переделанный\ModBusHelper\bin\Debug\NModbus.dll
+C:\Users\Gultyaev_PN\Desktop\ModBusHelper 11.2024 - User Friendly — переделанный\ModBusHelper\bin\Debug\CommonFunctions.pdb
+C:\Users\Gultyaev_PN\Desktop\ModBusHelper 11.2024 - User Friendly — переделанный\ModBusHelper\bin\Debug\NModbus.pdb
+C:\Users\Gultyaev_PN\Desktop\ModBusHelper 11.2024 - User Friendly — переделанный\ModBusHelper\bin\Debug\NModbus.xml
+C:\Users\Gultyaev_PN\Desktop\ModBusHelper 11.2024 - User Friendly — переделанный\ModBusHelper\obj\Debug\ModBusHelper.csproj.AssemblyReference.cache
+C:\Users\Gultyaev_PN\Desktop\ModBusHelper 11.2024 - User Friendly — переделанный\ModBusHelper\obj\Debug\ModBusHelper.csproj.CoreCompileInputs.cache
+C:\Users\Gultyaev_PN\Desktop\ModBusHelper 11.2024 - User Friendly — переделанный\ModBusHelper\obj\Debug\ModBusHe.DCE69543.Up2Date
+C:\Users\Gultyaev_PN\Desktop\ModBusHelper 11.2024 - User Friendly — переделанный\ModBusHelper\obj\Debug\ModBusHelper.dll
+C:\Users\Gultyaev_PN\Desktop\ModBusHelper 11.2024 - User Friendly — переделанный\ModBusHelper\obj\Debug\ModBusHelper.pdb
+C:\Users\Gultyaev_PN\Desktop\ModBusHelper 11.2024 - User Friendly(new)\ModBusHelper\bin\Debug\ModBusHelper.dll
+C:\Users\Gultyaev_PN\Desktop\ModBusHelper 11.2024 - User Friendly(new)\ModBusHelper\bin\Debug\ModBusHelper.pdb
+C:\Users\Gultyaev_PN\Desktop\ModBusHelper 11.2024 - User Friendly(new)\ModBusHelper\bin\Debug\CommonFunctions.dll
+C:\Users\Gultyaev_PN\Desktop\ModBusHelper 11.2024 - User Friendly(new)\ModBusHelper\bin\Debug\NModbus.dll
+C:\Users\Gultyaev_PN\Desktop\ModBusHelper 11.2024 - User Friendly(new)\ModBusHelper\bin\Debug\CommonFunctions.pdb
+C:\Users\Gultyaev_PN\Desktop\ModBusHelper 11.2024 - User Friendly(new)\ModBusHelper\bin\Debug\NModbus.pdb
+C:\Users\Gultyaev_PN\Desktop\ModBusHelper 11.2024 - User Friendly(new)\ModBusHelper\bin\Debug\NModbus.xml
+C:\Users\Gultyaev_PN\Desktop\ModBusHelper 11.2024 - User Friendly(new)\ModBusHelper\obj\Debug\ModBusHelper.csproj.AssemblyReference.cache
+C:\Users\Gultyaev_PN\Desktop\ModBusHelper 11.2024 - User Friendly(new)\ModBusHelper\obj\Debug\ModBusHelper.csproj.CoreCompileInputs.cache
+C:\Users\Gultyaev_PN\Desktop\ModBusHelper 11.2024 - User Friendly(new)\ModBusHelper\obj\Debug\ModBusHe.DCE69543.Up2Date
+C:\Users\Gultyaev_PN\Desktop\ModBusHelper 11.2024 - User Friendly(new)\ModBusHelper\obj\Debug\ModBusHelper.dll
+C:\Users\Gultyaev_PN\Desktop\ModBusHelper 11.2024 - User Friendly(new)\ModBusHelper\obj\Debug\ModBusHelper.pdb

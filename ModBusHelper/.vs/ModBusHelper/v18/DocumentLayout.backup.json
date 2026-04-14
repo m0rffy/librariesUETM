@@ -1,0 +1,79 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\Gultyaev_PN\\Desktop\\ModBusHelper 11.2024 - User Friendly(new)\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{ADCE90B7-837F-45C4-B461-4A4EE91531CB}|ModBusHelper\\ModBusHelper.csproj|c:\\users\\gultyaev_pn\\desktop\\modbushelper 11.2024 - user friendly(new)\\modbushelper\\modbusfunctions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{ADCE90B7-837F-45C4-B461-4A4EE91531CB}|ModBusHelper\\ModBusHelper.csproj|solutionrelative:modbushelper\\modbusfunctions.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{ADCE90B7-837F-45C4-B461-4A4EE91531CB}|ModBusHelper\\ModBusHelper.csproj|c:\\users\\gultyaev_pn\\desktop\\modbushelper 11.2024 - user friendly(new)\\modbushelper\\modbusprofile.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{ADCE90B7-837F-45C4-B461-4A4EE91531CB}|ModBusHelper\\ModBusHelper.csproj|solutionrelative:modbushelper\\modbusprofile.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{ADCE90B7-837F-45C4-B461-4A4EE91531CB}|ModBusHelper\\ModBusHelper.csproj|c:\\users\\gultyaev_pn\\desktop\\modbushelper 11.2024 - user friendly(new)\\modbushelper\\modbusexporterlinker.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{ADCE90B7-837F-45C4-B461-4A4EE91531CB}|ModBusHelper\\ModBusHelper.csproj|solutionrelative:modbushelper\\modbusexporterlinker.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 4,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{3ae79031-e1bc-11d0-8f78-00a0c9110057}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{e5c86464-96be-4d7c-9a8b-abcb3bbf5f92}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "ModBusExporterLinker.cs",
+              "DocumentMoniker": "C:\\Users\\Gultyaev_PN\\Desktop\\ModBusHelper 11.2024 - User Friendly(new)\\ModBusHelper\\ModBusExporterLinker.cs",
+              "RelativeDocumentMoniker": "ModBusHelper\\ModBusExporterLinker.cs",
+              "ToolTip": "C:\\Users\\Gultyaev_PN\\Desktop\\ModBusHelper 11.2024 - User Friendly(new)\\ModBusHelper\\ModBusExporterLinker.cs",
+              "RelativeToolTip": "ModBusHelper\\ModBusExporterLinker.cs",
+              "ViewState": "AgIAABcBAAAAAAAAAAArwC8BAABRAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-13T10:36:10.823Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "ModBusProfile.cs",
+              "DocumentMoniker": "C:\\Users\\Gultyaev_PN\\Desktop\\ModBusHelper 11.2024 - User Friendly(new)\\ModBusHelper\\ModBusProfile.cs",
+              "RelativeDocumentMoniker": "ModBusHelper\\ModBusProfile.cs",
+              "ToolTip": "C:\\Users\\Gultyaev_PN\\Desktop\\ModBusHelper 11.2024 - User Friendly(new)\\ModBusHelper\\ModBusProfile.cs",
+              "RelativeToolTip": "ModBusHelper\\ModBusProfile.cs",
+              "ViewState": "AgIAAGcDAAAAAAAAAAAjwIwDAABbAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-13T10:33:36.406Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "ModBusFunctions.cs",
+              "DocumentMoniker": "C:\\Users\\Gultyaev_PN\\Desktop\\ModBusHelper 11.2024 - User Friendly(new)\\ModBusHelper\\ModBusFunctions.cs",
+              "RelativeDocumentMoniker": "ModBusHelper\\ModBusFunctions.cs",
+              "ToolTip": "C:\\Users\\Gultyaev_PN\\Desktop\\ModBusHelper 11.2024 - User Friendly(new)\\ModBusHelper\\ModBusFunctions.cs",
+              "RelativeToolTip": "ModBusHelper\\ModBusFunctions.cs",
+              "ViewState": "AgIAAEMBAAAAAAAAAAAjwGQBAAANAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-13T10:32:28.631Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
