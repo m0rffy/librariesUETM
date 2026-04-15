@@ -365,6 +365,7 @@ namespace ModBusHelper
             var master = connection.Item2;
             WasRebootCommandSent = false;
 
+            // 1. Запись всех групп настроек в Modbus-буфер устройства
             try
             {
                 ModBusProfileHelper.cmns_Write(master, txt, AdminRights);
@@ -375,27 +376,21 @@ namespace ModBusHelper
                 ModBusProfileHelper.swrcs_Write(master, txt, AdminRights);
                 ModBusProfileHelper.accor_Write(master, txt, AdminRights);
             }
-            catch (Exception ex) when (IsConnectionError(ex))
+            catch (Exception ex)
             {
-                // Соединение разорвано преждевременно — возможно, устройство уже перезагружается
+                if (!IsConnectionError(ex))
+                    throw;
+                // Если соединение уже разорвано, считаем, что перезагрузка запущена
                 WasRebootCommandSent = true;
                 return;
-            }
-            catch (Exception)
-            {
-                throw; // Другие ошибки пробрасываем выше
             }
 
             try
             {
-                // 2. Запуск сохранения во Flash с последующей перезагрузкой (флаг 0x0100)
                 ModBusCommands commands = new ModBusCommands();
-                var response = commands.upload_settings(master, 0x0100);
-
-                if (response?.Data?.Count > 0 && (response.Data[0] == 0xFF || response.Data[0] == 0x00))
-                {
-                    WasRebootCommandSent = true;
-                }
+                // Отправляем команду перезагрузки. Не ждём ответа, так как устройство закроет соединение.
+                commands.upload_settings(master, 0x0100);
+                WasRebootCommandSent = true;
             }
             catch (Exception ex)
             {
