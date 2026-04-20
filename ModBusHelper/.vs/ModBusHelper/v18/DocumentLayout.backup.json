@@ -3,8 +3,8 @@
   "WorkspaceRootPath": "C:\\Users\\Gultyaev_PN\\Desktop\\librariesUETM\\ModBusHelper\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{ADCE90B7-837F-45C4-B461-4A4EE91531CB}|ModBusHelper\\ModBusHelper.csproj|c:\\users\\gultyaev_pn\\desktop\\librariesuetm\\modbushelper\\modbushelper\\modbusexporterlinker.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{ADCE90B7-837F-45C4-B461-4A4EE91531CB}|ModBusHelper\\ModBusHelper.csproj|solutionrelative:modbushelper\\modbusexporterlinker.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{ADCE90B7-837F-45C4-B461-4A4EE91531CB}|ModBusHelper\\ModBusHelper.csproj|c:\\users\\gultyaev_pn\\desktop\\librariesuetm\\modbushelper\\modbushelper\\modbusprofile.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{ADCE90B7-837F-45C4-B461-4A4EE91531CB}|ModBusHelper\\ModBusHelper.csproj|solutionrelative:modbushelper\\modbusprofile.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -27,14 +27,14 @@
             {
               "$type": "Document",
               "DocumentIndex": 0,
-              "Title": "ModBusExporterLinker.cs",
-              "DocumentMoniker": "C:\\Users\\Gultyaev_PN\\Desktop\\librariesUETM\\ModBusHelper\\ModBusHelper\\ModBusExporterLinker.cs",
-              "RelativeDocumentMoniker": "ModBusHelper\\ModBusExporterLinker.cs",
-              "ToolTip": "C:\\Users\\Gultyaev_PN\\Desktop\\librariesUETM\\ModBusHelper\\ModBusHelper\\ModBusExporterLinker.cs",
-              "RelativeToolTip": "ModBusHelper\\ModBusExporterLinker.cs",
-              "ViewState": "AgIAAHgBAAAAAAAAAAAAwIcBAAA5AAAAAAAAAA==",
+              "Title": "ModBusProfile.cs",
+              "DocumentMoniker": "C:\\Users\\Gultyaev_PN\\Desktop\\librariesUETM\\ModBusHelper\\ModBusHelper\\ModBusProfile.cs",
+              "RelativeDocumentMoniker": "ModBusHelper\\ModBusProfile.cs",
+              "ToolTip": "C:\\Users\\Gultyaev_PN\\Desktop\\librariesUETM\\ModBusHelper\\ModBusHelper\\ModBusProfile.cs",
+              "RelativeToolTip": "ModBusHelper\\ModBusProfile.cs",
+              "ViewState": "AgIAADIDAAAAAAAAAAAjwEADAAAJAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-04-15T06:39:29.66Z",
+              "WhenOpened": "2026-04-17T07:02:40.091Z",
               "EditorCaption": ""
             }
           ]

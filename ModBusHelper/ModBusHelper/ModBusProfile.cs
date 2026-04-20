@@ -834,7 +834,6 @@ namespace ModBusHelper
 
         public void time_Write(IModbusMaster Master, GeneralSettings_TextFormat GeneralSettingsValues_TextFormat, bool AdminRights)
         {
-            // Без изменений (нет строковых полей)
             time_TextFormat timeValues_TextFormat = GeneralSettingsValues_TextFormat.time;
 
             ushort addr = 2816;
