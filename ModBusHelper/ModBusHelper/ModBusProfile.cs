@@ -856,50 +856,49 @@ namespace ModBusHelper
         public void nets_Write(IModbusMaster Master, GeneralSettings_TextFormat GeneralSettingsValues_TextFormat, bool AdminRights)
         {
             nets_TextFormat netsValues_TextFormat = GeneralSettingsValues_TextFormat.nets;
-            bool writeGss = netsValues_TextFormat.gssSupported;
-
             ushort addr = 2304;
+            ushort actualSize = netsValues_TextFormat.ActualSizeRegs;
 
-            // ownAddr (0-2)
-            ushort[] ownAddr = ModbusFunctionsHelper.ConvertByteArrayToUShortArray(
-                netsValues_TextFormat.ownAddr ?? new byte[6], true);
-            Master.WriteMultipleRegisters(0, addr, ownAddr);
-
-            // mbport (3)
-            ushort mbport = Convert.ToUInt16(string.IsNullOrEmpty(netsValues_TextFormat.mbport) ? "502" : netsValues_TextFormat.mbport);
-            ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, (ushort)(addr + 3), mbport);
-
-            // ips (4-19)
-            ushort ipsaddr = 2308;
+            // ownAddr (3 регистра)
+            if (actualSize >= 3)
             {
-                ushort[] ipMask = ModbusFunctionsHelper.ConvertByteArrayToUShortArray(
-                    netsValues_TextFormat.ips.ipMask ?? new byte[4], true);
+                ushort[] ownAddr = ModbusFunctionsHelper.ConvertByteArrayToUShortArray(netsValues_TextFormat.ownAddr ?? new byte[6], true);
+                Master.WriteMultipleRegisters(0, addr, ownAddr);
+            }
+
+            // mbport
+            if (actualSize >= 4)
+            {
+                ushort mbport = Convert.ToUInt16(string.IsNullOrEmpty(netsValues_TextFormat.mbport) ? "502" : netsValues_TextFormat.mbport);
+                ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, (ushort)(addr + 3), mbport);
+            }
+
+            // ips (16 регистров, начиная с 4)
+            if (actualSize >= 20)
+            {
+                ushort ipsaddr = 2308;
+                ushort[] ipMask = ModbusFunctionsHelper.ConvertByteArrayToUShortArray(netsValues_TextFormat.ips.ipMask ?? new byte[4], true);
                 Master.WriteMultipleRegisters(0, ipsaddr, ipMask);
-                ushort[] GateWay = ModbusFunctionsHelper.ConvertByteArrayToUShortArray(
-                    netsValues_TextFormat.ips.GateWay ?? new byte[4], true);
+                ushort[] GateWay = ModbusFunctionsHelper.ConvertByteArrayToUShortArray(netsValues_TextFormat.ips.GateWay ?? new byte[4], true);
                 Master.WriteMultipleRegisters(0, (ushort)(ipsaddr + 2), GateWay);
-                ushort[] ipAddr = ModbusFunctionsHelper.ConvertByteArrayToUShortArray(
-                    netsValues_TextFormat.ips.ipAddr ?? new byte[4], true);
+                ushort[] ipAddr = ModbusFunctionsHelper.ConvertByteArrayToUShortArray(netsValues_TextFormat.ips.ipAddr ?? new byte[4], true);
                 Master.WriteMultipleRegisters(0, (ushort)(ipsaddr + 4), ipAddr);
-                ushort[] opts = ModbusFunctionsHelper.ConvertByteArrayToUShortArray(
-                    netsValues_TextFormat.ips.opts ?? new byte[4], true);
+                ushort[] opts = ModbusFunctionsHelper.ConvertByteArrayToUShortArray(netsValues_TextFormat.ips.opts ?? new byte[4], true);
                 Master.WriteMultipleRegisters(0, (ushort)(ipsaddr + 6), opts);
-                ushort[] name = ModbusFunctionsHelper.ConvertStringToUshortArray(
-                    netsValues_TextFormat.ips.name ?? "", 16);
+                ushort[] name = ModbusFunctionsHelper.ConvertStringToUshortArray(netsValues_TextFormat.ips.name ?? "", 16);
                 Master.WriteMultipleRegisters(0, (ushort)(ipsaddr + 8), name);
             }
 
-            // svs (20-51)
-            ushort svsaddr = 2324;
+            // svs – старая часть (регистры 20-45) + sName
+            if (actualSize >= 46)
             {
-                ushort[] cfgRev = ModbusFunctionsHelper.ConvertUintToUshortArray(
-                    UInt32.Parse(string.IsNullOrEmpty(netsValues_TextFormat.svs.cfgRev) ? "0" : netsValues_TextFormat.svs.cfgRev));
+                ushort svsaddr = 2324;
+                ushort[] cfgRev = ModbusFunctionsHelper.ConvertUintToUshortArray(UInt32.Parse(string.IsNullOrEmpty(netsValues_TextFormat.svs.cfgRev) ? "0" : netsValues_TextFormat.svs.cfgRev));
                 Array.Reverse(cfgRev);
                 Master.WriteMultipleRegisters(0, svsaddr, cfgRev);
 
                 ushort dstAddraddr = 2326;
-                ushort[] dstMAC = ModbusFunctionsHelper.ConvertByteArrayToUShortArray(
-                    netsValues_TextFormat.svs.dstAddr.dstMAC ?? new byte[6], true);
+                ushort[] dstMAC = ModbusFunctionsHelper.ConvertByteArrayToUShortArray(netsValues_TextFormat.svs.dstAddr.dstMAC ?? new byte[6], true);
                 Master.WriteMultipleRegisters(0, dstAddraddr, dstMAC);
                 ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, (ushort)(dstAddraddr + 3),
                     Convert.ToUInt16(string.IsNullOrEmpty(netsValues_TextFormat.svs.dstAddr.appID) ? "0" : netsValues_TextFormat.svs.dstAddr.appID));
@@ -908,93 +907,118 @@ namespace ModBusHelper
                 ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, (ushort)(dstAddraddr + 5),
                     Convert.ToUInt16(string.IsNullOrEmpty(netsValues_TextFormat.svs.dstAddr.Prio) ? "0" : netsValues_TextFormat.svs.dstAddr.Prio));
 
-                ushort[] sName = ModbusFunctionsHelper.ConvertStringToUshortArray(
-                    netsValues_TextFormat.svs.sName ?? "", 36);
+                ushort[] sName = ModbusFunctionsHelper.ConvertStringToUshortArray(netsValues_TextFormat.svs.sName ?? "", 36);
                 Master.WriteMultipleRegisters(0, (ushort)(svsaddr + 8), sName);
+            }
 
-                if (writeGss)
-                {
-                    // Новые поля SV (46-51)
-                    ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, 2350,
-                        Convert.ToUInt16(string.IsNullOrEmpty(netsValues_TextFormat.svs.nspp) ? "0" : netsValues_TextFormat.svs.nspp));
-                    ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, 2351,
-                        Convert.ToUInt16(string.IsNullOrEmpty(netsValues_TextFormat.svs.nasdu) ? "0" : netsValues_TextFormat.svs.nasdu));
-                    ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, 2352,
-                        Convert.ToUInt16(string.IsNullOrEmpty(netsValues_TextFormat.svs.nsig) ? "0" : netsValues_TextFormat.svs.nsig));
-                    ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, 2353,
-                        Convert.ToUInt16(string.IsNullOrEmpty(netsValues_TextFormat.svs.nasdu_IU) ? "0" : netsValues_TextFormat.svs.nasdu_IU));
-                    ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, 2354,
-                        Convert.ToUInt16(string.IsNullOrEmpty(netsValues_TextFormat.svs.gmidentity_ena) ? "0" : netsValues_TextFormat.svs.gmidentity_ena));
-                    ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, 2355,
-                        Convert.ToUInt16(string.IsNullOrEmpty(netsValues_TextFormat.svs.smprate_ena) ? "0" : netsValues_TextFormat.svs.smprate_ena));
+            // Новые SV поля (46-51)
+            if (actualSize >= 52)
+            {
+                ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, 2350,
+                    Convert.ToUInt16(string.IsNullOrEmpty(netsValues_TextFormat.svs.nspp) ? "0" : netsValues_TextFormat.svs.nspp));
+                ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, 2351,
+                    Convert.ToUInt16(string.IsNullOrEmpty(netsValues_TextFormat.svs.nasdu) ? "0" : netsValues_TextFormat.svs.nasdu));
+                ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, 2352,
+                    Convert.ToUInt16(string.IsNullOrEmpty(netsValues_TextFormat.svs.nsig) ? "0" : netsValues_TextFormat.svs.nsig));
+                ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, 2353,
+                    Convert.ToUInt16(string.IsNullOrEmpty(netsValues_TextFormat.svs.nasdu_IU) ? "0" : netsValues_TextFormat.svs.nasdu_IU));
+                ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, 2354,
+                    Convert.ToUInt16(string.IsNullOrEmpty(netsValues_TextFormat.svs.gmidentity_ena) ? "0" : netsValues_TextFormat.svs.gmidentity_ena));
+                ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, 2355,
+                    Convert.ToUInt16(string.IsNullOrEmpty(netsValues_TextFormat.svs.smprate_ena) ? "0" : netsValues_TextFormat.svs.smprate_ena));
+            }
 
-                    // gss (52-61)
-                    ushort gssBase = 2356;
-                    ushort[] gss_cfgRev = ModbusFunctionsHelper.ConvertUintToUshortArray(
-                        UInt32.Parse(string.IsNullOrEmpty(netsValues_TextFormat.gss.cfgRev) ? "0" : netsValues_TextFormat.gss.cfgRev));
-                    Array.Reverse(gss_cfgRev);
-                    Master.WriteMultipleRegisters(0, gssBase, gss_cfgRev);
-                    ushort[] gss_dstMAC = ModbusFunctionsHelper.ConvertByteArrayToUShortArray(
-                        netsValues_TextFormat.gss.dstAddr.dstMAC ?? new byte[6], true);
-                    Master.WriteMultipleRegisters(0, (ushort)(gssBase + 2), gss_dstMAC);
-                    ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, (ushort)(gssBase + 5),
-                        Convert.ToUInt16(string.IsNullOrEmpty(netsValues_TextFormat.gss.dstAddr.appID) ? "0" : netsValues_TextFormat.gss.dstAddr.appID));
-                    ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, (ushort)(gssBase + 6),
-                        Convert.ToUInt16(string.IsNullOrEmpty(netsValues_TextFormat.gss.dstAddr.VID) ? "0" : netsValues_TextFormat.gss.dstAddr.VID));
-                    ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, (ushort)(gssBase + 7),
-                        Convert.ToUInt16(string.IsNullOrEmpty(netsValues_TextFormat.gss.dstAddr.Prio) ? "0" : netsValues_TextFormat.gss.dstAddr.Prio));
-                    ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, (ushort)(gssBase + 8),
-                        Convert.ToUInt16(string.IsNullOrEmpty(netsValues_TextFormat.gss.sml) ? "0" : netsValues_TextFormat.gss.sml));
-                    ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, (ushort)(gssBase + 9),
-                        Convert.ToUInt16(string.IsNullOrEmpty(netsValues_TextFormat.gss.brmode) ? "0" : netsValues_TextFormat.gss.brmode));
-                }
+            // gss (52-61)
+            if (actualSize >= 62)
+            {
+                ushort gssBase = 2356;
+                ushort[] gss_cfgRev = ModbusFunctionsHelper.ConvertUintToUshortArray(UInt32.Parse(string.IsNullOrEmpty(netsValues_TextFormat.gss.cfgRev) ? "0" : netsValues_TextFormat.gss.cfgRev));
+                Array.Reverse(gss_cfgRev);
+                Master.WriteMultipleRegisters(0, gssBase, gss_cfgRev);
+                ushort[] gss_dstMAC = ModbusFunctionsHelper.ConvertByteArrayToUShortArray(netsValues_TextFormat.gss.dstAddr.dstMAC ?? new byte[6], true);
+                Master.WriteMultipleRegisters(0, (ushort)(gssBase + 2), gss_dstMAC);
+                ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, (ushort)(gssBase + 5),
+                    Convert.ToUInt16(string.IsNullOrEmpty(netsValues_TextFormat.gss.dstAddr.appID) ? "0" : netsValues_TextFormat.gss.dstAddr.appID));
+                ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, (ushort)(gssBase + 6),
+                    Convert.ToUInt16(string.IsNullOrEmpty(netsValues_TextFormat.gss.dstAddr.VID) ? "0" : netsValues_TextFormat.gss.dstAddr.VID));
+                ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, (ushort)(gssBase + 7),
+                    Convert.ToUInt16(string.IsNullOrEmpty(netsValues_TextFormat.gss.dstAddr.Prio) ? "0" : netsValues_TextFormat.gss.dstAddr.Prio));
+                ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, (ushort)(gssBase + 8),
+                    Convert.ToUInt16(string.IsNullOrEmpty(netsValues_TextFormat.gss.sml) ? "0" : netsValues_TextFormat.gss.sml));
+                ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, (ushort)(gssBase + 9),
+                    Convert.ToUInt16(string.IsNullOrEmpty(netsValues_TextFormat.gss.brmode) ? "0" : netsValues_TextFormat.gss.brmode));
             }
         }
 
-        // Исправленный метод meas_Write в ModBusProfile.cs
+
         public void meas_Write(IModbusMaster Master, GeneralSettings_TextFormat GeneralSettingsValues_TextFormat, bool AdminRights)
         {
             meas_TextFormat meas = GeneralSettingsValues_TextFormat.meas;
             ushort addr = 3584;
+            ushort actualSize = meas.ActualSizeRegs;   // получен при последнем чтении
 
-            // Inom1 (W) – номинальный первичный ток (А)
-            ushort Inom1 = Convert.ToUInt16(string.IsNullOrEmpty(meas.primct.Inom1) ? "0" : meas.primct.Inom1);
-            ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, (ushort)(addr + 0), Inom1);
+            // Inom1 (W)
+            if (actualSize >= 1)
+            {
+                ushort Inom1 = Convert.ToUInt16(string.IsNullOrEmpty(meas.primct.Inom1) ? "0" : meas.primct.Inom1);
+                ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, (ushort)(addr + 0), Inom1);
+            }
 
-            // Inom2 (D) – номинальный вторичный ток (мА)
-            ushort Inom2 = Convert.ToUInt16(string.IsNullOrEmpty(meas.primct.Inom2) ? "0" : meas.primct.Inom2);
-            ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, (ushort)(addr + 1), Inom2);
+            // Inom2 (D)
+            if (actualSize >= 2)
+            {
+                ushort Inom2 = Convert.ToUInt16(string.IsNullOrEmpty(meas.primct.Inom2) ? "0" : meas.primct.Inom2);
+                ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, (ushort)(addr + 1), Inom2);
+            }
 
-            // label (W) – строка CP1251, 4 регистра
-            ushort[] label = ModbusFunctionsHelper.ConvertStringToUshortArray(meas.primct.label ?? "", 8);
-            Master.WriteMultipleRegisters(0, (ushort)(addr + 2), label);
+            // label (W) – 4 регистра
+            if (actualSize >= 6)
+            {
+                ushort[] label = ModbusFunctionsHelper.ConvertStringToUshortArray(meas.primct.label ?? "", 8);
+                Master.WriteMultipleRegisters(0, (ushort)(addr + 2), label);
+            }
 
-            // Rsh (D) – сопротивление шунта (Ом), float
-            float rshVal = float.Parse(string.IsNullOrEmpty(meas.Rsh) ? "0" : meas.Rsh, CultureInfo.InvariantCulture);
-            ushort[] Rsh = ModbusFunctionsHelper.ConvertFloatToUshortArray(rshVal);
-            Array.Reverse(Rsh);
-            Master.WriteMultipleRegisters(0, (ushort)(addr + 6), Rsh);
+            // Rsh (D)
+            if (actualSize >= 8)
+            {
+                float rshVal = float.Parse(string.IsNullOrEmpty(meas.Rsh) ? "0" : meas.Rsh, CultureInfo.InvariantCulture);
+                ushort[] Rsh = ModbusFunctionsHelper.ConvertFloatToUshortArray(rshVal);
+                Array.Reverse(Rsh);
+                Master.WriteMultipleRegisters(0, (ushort)(addr + 6), Rsh);
+            }
 
-            // sscle (W) – масштабный коэффициент тока в SV потоке
-            ushort sscle = Convert.ToUInt16(string.IsNullOrEmpty(meas.sscle) ? "0" : meas.sscle);
-            ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, (ushort)(addr + 8), sscle);
+            // sscle (W)
+            if (actualSize >= 9)
+            {
+                ushort sscle = Convert.ToUInt16(string.IsNullOrEmpty(meas.sscle) ? "0" : meas.sscle);
+                ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, (ushort)(addr + 8), sscle);
+            }
 
-            // Nturns (D) – количество витков
-            ushort Nturns = Convert.ToUInt16(string.IsNullOrEmpty(meas.Nturns) ? "0" : meas.Nturns);
-            ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, (ushort)(addr + 9), Nturns);
+            // Nturns (D)
+            if (actualSize >= 10)
+            {
+                ushort Nturns = Convert.ToUInt16(string.IsNullOrEmpty(meas.Nturns) ? "0" : meas.Nturns);
+                ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, (ushort)(addr + 9), Nturns);
+            }
 
-            // adcrng (D) – предел АЦП (5 или 10 В)
-            ushort adcrng = Convert.ToUInt16(string.IsNullOrEmpty(meas.adcrng) ? "0" : meas.adcrng);
-            ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, (ushort)(addr + 10), adcrng);
+            // adcrng (D)
+            if (actualSize >= 11)
+            {
+                ushort adcrng = Convert.ToUInt16(string.IsNullOrEmpty(meas.adcrng) ? "0" : meas.adcrng);
+                ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, (ushort)(addr + 10), adcrng);
+            }
 
-            // aStart / aStop (W) – упакованы в один регистр
-            byte aStart = Convert.ToByte(string.IsNullOrEmpty(meas.aStart) ? "0" : meas.aStart);
-            byte aStop = Convert.ToByte(string.IsNullOrEmpty(meas.aStop) ? "0" : meas.aStop);
-            ushort ADCNumbers = BitConverter.ToUInt16(new byte[2] { aStart, aStop }, 0);
-            ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, (ushort)(addr + 11), ADCNumbers);
+            // aStart / aStop (W)
+            if (actualSize >= 12)
+            {
+                byte aStart = Convert.ToByte(string.IsNullOrEmpty(meas.aStart) ? "0" : meas.aStart);
+                byte aStop = Convert.ToByte(string.IsNullOrEmpty(meas.aStop) ? "0" : meas.aStop);
+                ushort ADCNumbers = BitConverter.ToUInt16(new byte[2] { aStart, aStop }, 0);
+                ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, (ushort)(addr + 11), ADCNumbers);
+            }
 
-            // adc_osf (D) – AD7608 OSF
-            if (AdminRights)
+            // adc_osf (D)
+            if (actualSize >= 14 && AdminRights)
             {
                 ushort[] adc_osf = ModbusFunctionsHelper.ConvertUintToUshortArray(
                     UInt32.Parse(string.IsNullOrEmpty(meas.adc_osf) ? "0" : meas.adc_osf));
@@ -1002,20 +1026,18 @@ namespace ModBusHelper
                 Master.WriteMultipleRegisters(0, (ushort)(addr + 12), adc_osf);
             }
 
-            // verif.next_verif (D) – дата следующей поверки (Unix timestamp)
-            if (AdminRights)
+            // verif.next_verif (D) – verif_st только чтение
+            if (actualSize >= 17 && AdminRights)
             {
-                string nextVerifStr = meas.verif.next_verif; // структура verif_TextFormat существует всегда
+                string nextVerifStr = meas.verif.next_verif;
                 ushort[] next_verif = ModbusFunctionsHelper.ConvertUintToUshortArray(
                     UInt32.Parse(string.IsNullOrEmpty(nextVerifStr) ? "0" : nextVerifStr));
                 Array.Reverse(next_verif);
                 Master.WriteMultipleRegisters(0, (ushort)(addr + 14), next_verif);
             }
-            // verif.verif_st – только чтение, не записываем
 
-            // qb (все поля D) – записываем только при AdminRights.
-            // Структура qb_TextFormat всегда существует (не может быть null), поэтому просто проверяем AdminRights.
-            if (AdminRights)
+            // qb (D) – только если actualSize >= 34 (все поля qb)
+            if (actualSize >= 34 && AdminRights)
             {
                 ushort method_oor = Convert.ToUInt16(string.IsNullOrEmpty(meas.qb.method_oor) ? "0" : meas.qb.method_oor);
                 ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, (ushort)(addr + 17), method_oor);
@@ -1059,7 +1081,6 @@ namespace ModBusHelper
                 ushort qb_mod = Convert.ToUInt16(string.IsNullOrEmpty(meas.qb.qb_mod) ? "0" : meas.qb.qb_mod);
                 ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, (ushort)(addr + 32), qb_mod);
 
-                // qb_msk – массив из 4-х ushort (по числу каналов)
                 List<ushort> mskList = new List<ushort>();
                 if (meas.qb.qb_msk != null)
                 {
@@ -1074,180 +1095,259 @@ namespace ModBusHelper
         public void syns_Write(IModbusMaster Master, GeneralSettings_TextFormat GeneralSettingsValues_TextFormat, bool AdminRights)
         {
             syns_TextFormat synsValues_TextFormat = GeneralSettingsValues_TextFormat.syns;
-
             ushort addr = 3072;
+            ushort actualSize = synsValues_TextFormat.ActualSizeRegs;
 
-            // sevOfs
-            ushort[] sevOfs = ModbusFunctionsHelper.ConvertIntToUshortArray(Int32.Parse(synsValues_TextFormat.sevOfs ?? "0"));
-            Array.Reverse(sevOfs);
-            Master.WriteMultipleRegisters(0, (ushort)(addr + 0x00), sevOfs);
+            // sevOfs (2 регистра, W)
+            if (actualSize >= 2)
+            {
+                ushort[] sevOfs = ModbusFunctionsHelper.ConvertIntToUshortArray(Int32.Parse(string.IsNullOrEmpty(synsValues_TextFormat.sevOfs) ? "0" : synsValues_TextFormat.sevOfs));
+                Array.Reverse(sevOfs);
+                Master.WriteMultipleRegisters(0, (ushort)(addr + 0x00), sevOfs);
+            }
 
-            ushort ptpsaddr = 3074;
+            // ptps.acv (2 регистра, W)
+            if (actualSize >= 4)
+            {
+                ushort[] acv = ModbusFunctionsHelper.ConvertIntToUshortArray(Int32.Parse(string.IsNullOrEmpty(synsValues_TextFormat.ptps.acv) ? "0" : synsValues_TextFormat.ptps.acv));
+                Array.Reverse(acv);
+                Master.WriteMultipleRegisters(0, (ushort)(addr + 0x02), acv);
+            }
 
-            // acv
-            ushort[] acv = ModbusFunctionsHelper.ConvertIntToUshortArray(Int32.Parse(synsValues_TextFormat.ptps.acv ?? "0"));
-            Array.Reverse(acv);
-            Master.WriteMultipleRegisters(0, (ushort)(ptpsaddr + 0x00), acv);
+            // ptps.ofthi (2 регистра, W)
+            if (actualSize >= 6)
+            {
+                ushort[] ofthi = ModbusFunctionsHelper.ConvertUintToUshortArray(UInt32.Parse(string.IsNullOrEmpty(synsValues_TextFormat.ptps.ofthi) ? "0" : synsValues_TextFormat.ptps.ofthi));
+                Array.Reverse(ofthi);
+                Master.WriteMultipleRegisters(0, (ushort)(addr + 0x04), ofthi);
+            }
 
-            // ofthi
-            ushort[] ofthi = ModbusFunctionsHelper.ConvertUintToUshortArray(UInt32.Parse(synsValues_TextFormat.ptps.ofthi ?? "0"));
-            Array.Reverse(ofthi);
-            Master.WriteMultipleRegisters(0, (ushort)(ptpsaddr + 0x02), ofthi);
+            // ptps.oftlo
+            if (actualSize >= 8)
+            {
+                ushort[] oftlo = ModbusFunctionsHelper.ConvertUintToUshortArray(UInt32.Parse(string.IsNullOrEmpty(synsValues_TextFormat.ptps.oftlo) ? "0" : synsValues_TextFormat.ptps.oftlo));
+                Array.Reverse(oftlo);
+                Master.WriteMultipleRegisters(0, (ushort)(addr + 0x06), oftlo);
+            }
 
-            // oftlo
-            ushort[] oftlo = ModbusFunctionsHelper.ConvertUintToUshortArray(UInt32.Parse(synsValues_TextFormat.ptps.oftlo ?? "0"));
-            Array.Reverse(oftlo);
-            Master.WriteMultipleRegisters(0, (ushort)(ptpsaddr + 0x04), oftlo);
+            // ptps.crst
+            if (actualSize >= 10)
+            {
+                ushort[] crst = ModbusFunctionsHelper.ConvertUintToUshortArray(UInt32.Parse(string.IsNullOrEmpty(synsValues_TextFormat.ptps.crst) ? "0" : synsValues_TextFormat.ptps.crst));
+                Array.Reverse(crst);
+                Master.WriteMultipleRegisters(0, (ushort)(addr + 0x08), crst);
+            }
 
-            // crst
-            ushort[] crst = ModbusFunctionsHelper.ConvertUintToUshortArray(UInt32.Parse(synsValues_TextFormat.ptps.crst ?? "0"));
-            Array.Reverse(crst);
-            Master.WriteMultipleRegisters(0, (ushort)(ptpsaddr + 0x06), crst);
+            // ptps.aclt
+            if (actualSize >= 12)
+            {
+                ushort[] aclt = ModbusFunctionsHelper.ConvertUintToUshortArray(UInt32.Parse(string.IsNullOrEmpty(synsValues_TextFormat.ptps.aclt) ? "0" : synsValues_TextFormat.ptps.aclt));
+                Array.Reverse(aclt);
+                Master.WriteMultipleRegisters(0, (ushort)(addr + 0x0A), aclt);
+            }
 
-            // aclt
-            ushort[] aclt = ModbusFunctionsHelper.ConvertUintToUshortArray(UInt32.Parse(synsValues_TextFormat.ptps.aclt ?? "0"));
-            Array.Reverse(aclt);
-            Master.WriteMultipleRegisters(0, (ushort)(ptpsaddr + 0x08), aclt);
+            // ptps.mmadr (3 регистра, W)
+            if (actualSize >= 15)
+            {
+                ushort[] mmadr = ModbusFunctionsHelper.ConvertByteArrayToUShortArray(synsValues_TextFormat.ptps.mmadr ?? new byte[6], true);
+                Master.WriteMultipleRegisters(0, (ushort)(addr + 0x0C), mmadr);
+            }
 
-            // mmadr
-            ushort[] mmadr = ModbusFunctionsHelper.ConvertByteArrayToUShortArray(synsValues_TextFormat.ptps.mmadr ?? new byte[6], true);
-            Master.WriteMultipleRegisters(0, (ushort)(ptpsaddr + 0x0A), mmadr);
+            // ptps.rqadr (3 регистра)
+            if (actualSize >= 18)
+            {
+                ushort[] rqadr = ModbusFunctionsHelper.ConvertByteArrayToUShortArray(synsValues_TextFormat.ptps.rqadr ?? new byte[6], true);
+                Master.WriteMultipleRegisters(0, (ushort)(addr + 0x0F), rqadr);
+            }
 
-            // rqadr
-            ushort[] rqadr = ModbusFunctionsHelper.ConvertByteArrayToUShortArray(synsValues_TextFormat.ptps.rqadr ?? new byte[6], true);
-            Master.WriteMultipleRegisters(0, (ushort)(ptpsaddr + 0x0D), rqadr);
+            // ptps.id.portNum (1 регистр)
+            if (actualSize >= 19)
+            {
+                ushort portNum = Convert.ToUInt16(string.IsNullOrEmpty(synsValues_TextFormat.ptps.id.portNum) ? "0" : synsValues_TextFormat.ptps.id.portNum);
+                ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, (ushort)(addr + 0x12), portNum);
+            }
 
-            // id
-            ushort idaddr = 3090;
-            ushort portNum = Convert.ToUInt16(synsValues_TextFormat.ptps.id.portNum ?? "0");
-            ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, (ushort)(idaddr + 0x00), portNum);
-            // clkId – используем CP1251
-            ushort[] clkId = ModbusFunctionsHelper.ConvertStringToUshortArray(synsValues_TextFormat.ptps.id.clkId ?? "", 8);
-            Master.WriteMultipleRegisters(0, (ushort)(idaddr + 0x01), clkId);
+            // ptps.id.clkId (4 регистра)
+            if (actualSize >= 23)
+            {
+                ushort[] clkId = ModbusFunctionsHelper.ConvertStringToUshortArray(synsValues_TextFormat.ptps.id.clkId ?? "", 8);
+                Master.WriteMultipleRegisters(0, (ushort)(addr + 0x13), clkId);
+            }
 
-            // rqpd / mcai
-            byte rqpd = Convert.ToByte(synsValues_TextFormat.ptps.rqpd ?? "0");
-            byte mcai = Convert.ToByte(synsValues_TextFormat.ptps.mcai ?? "0");
-            ushort SyncNumbers = BitConverter.ToUInt16(new byte[2] { rqpd, mcai }, 0);
-            ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, (ushort)(ptpsaddr + 0x15), SyncNumbers);
+            // rqpd / mcai (1 регистр)
+            if (actualSize >= 24)
+            {
+                byte rqpd = Convert.ToByte(string.IsNullOrEmpty(synsValues_TextFormat.ptps.rqpd) ? "0" : synsValues_TextFormat.ptps.rqpd);
+                byte mcai = Convert.ToByte(string.IsNullOrEmpty(synsValues_TextFormat.ptps.mcai) ? "0" : synsValues_TextFormat.ptps.mcai);
+                ushort SyncNumbers = BitConverter.ToUInt16(new byte[2] { rqpd, mcai }, 0);
+                ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, (ushort)(addr + 0x17), SyncNumbers);
+            }
 
             // lmscm
-            ushort lmscm = Convert.ToUInt16(synsValues_TextFormat.lmscm ?? "0");
-            ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, (ushort)(addr + 0x18), lmscm);
+            if (actualSize >= 25)
+            {
+                ushort lmscm = Convert.ToUInt16(string.IsNullOrEmpty(synsValues_TextFormat.lmscm) ? "0" : synsValues_TextFormat.lmscm);
+                ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, (ushort)(addr + 0x18), lmscm);
+            }
 
             // umscm
-            ushort umscm = Convert.ToUInt16(synsValues_TextFormat.umscm ?? "0");
-            ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, (ushort)(addr + 0x19), umscm);
+            if (actualSize >= 26)
+            {
+                ushort umscm = Convert.ToUInt16(string.IsNullOrEmpty(synsValues_TextFormat.umscm) ? "0" : synsValues_TextFormat.umscm);
+                ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, (ushort)(addr + 0x19), umscm);
+            }
+
+            // res (если есть)
+            if (actualSize >= 28 && synsValues_TextFormat.res != null)
+            {
+                // res – массив байт, обычно 2 байта. Записываем как есть.
+                byte[] resBytes = new byte[2];
+                // заполнение из res...
+                ushort[] res = ModbusFunctionsHelper.ConvertByteArrayToUShortArray(resBytes, true);
+                Master.WriteMultipleRegisters(0, (ushort)(addr + 0x1A), res);
+            }
         }
 
         public void time_Write(IModbusMaster Master, GeneralSettings_TextFormat GeneralSettingsValues_TextFormat, bool AdminRights)
         {
             time_TextFormat timeValues_TextFormat = GeneralSettingsValues_TextFormat.time;
-
             ushort addr = 2816;
-            ushort ptpvaladdr = 2816;
+            ushort actualSize = timeValues_TextFormat.ActualSizeRegs;
 
-            ushort[] ns = ModbusFunctionsHelper.ConvertUintToUshortArray(UInt32.Parse(timeValues_TextFormat.ptpval.ns ?? "0"));
-            Array.Reverse(ns);
-            Master.WriteMultipleRegisters(0, (ushort)(ptpvaladdr + 0x00), ns);
+            // ptpval.ns (2 регистра)
+            if (actualSize >= 2)
+            {
+                ushort[] ns = ModbusFunctionsHelper.ConvertUintToUshortArray(UInt32.Parse(string.IsNullOrEmpty(timeValues_TextFormat.ptpval.ns) ? "0" : timeValues_TextFormat.ptpval.ns));
+                Array.Reverse(ns);
+                Master.WriteMultipleRegisters(0, (ushort)(addr + 0x00), ns);
+            }
 
-            ushort[] slo = ModbusFunctionsHelper.ConvertUintToUshortArray(UInt32.Parse(timeValues_TextFormat.ptpval.slo ?? "0"));
-            Array.Reverse(slo);
-            Master.WriteMultipleRegisters(0, (ushort)(ptpvaladdr + 0x02), slo);
+            // ptpval.slo (2 регистра)
+            if (actualSize >= 4)
+            {
+                ushort[] slo = ModbusFunctionsHelper.ConvertUintToUshortArray(UInt32.Parse(string.IsNullOrEmpty(timeValues_TextFormat.ptpval.slo) ? "0" : timeValues_TextFormat.ptpval.slo));
+                Array.Reverse(slo);
+                Master.WriteMultipleRegisters(0, (ushort)(addr + 0x02), slo);
+            }
 
-            ushort ptsecHi = Convert.ToUInt16(timeValues_TextFormat.ptsecHi ?? "0");
-            ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, (ushort)(addr + 0x04), ptsecHi);
+            // ptsecHi
+            if (actualSize >= 5)
+            {
+                ushort ptsecHi = Convert.ToUInt16(string.IsNullOrEmpty(timeValues_TextFormat.ptsecHi) ? "0" : timeValues_TextFormat.ptsecHi);
+                ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, (ushort)(addr + 0x04), ptsecHi);
+            }
 
-            ushort optsOffset = 0x05;
-            byte[] optsBytes = timeValues_TextFormat.opts ?? new byte[2];
-            ushort[] opts = ModbusFunctionsHelper.ConvertByteArrayToUShortArray(optsBytes, true);
-            Master.WriteMultipleRegisters(0, (ushort)(addr + optsOffset), opts);
+            // opts
+            if (actualSize >= 6)
+            {
+                byte[] optsBytes = timeValues_TextFormat.opts ?? new byte[2];
+                ushort[] opts = ModbusFunctionsHelper.ConvertByteArrayToUShortArray(optsBytes, true);
+                Master.WriteMultipleRegisters(0, (ushort)(addr + 0x05), opts);
+            }
         }
 
-        // Исправленный метод swrcs_Write в ModBusProfile.cs
+
         public void swrcs_Write(IModbusMaster Master, GeneralSettings_TextFormat GeneralSettingsValues_TextFormat, bool AdminRights)
         {
             swrcs_TextFormat swrcs = GeneralSettingsValues_TextFormat.swrcs;
-            ushort num = 3328;
+            ushort swrcsAddr = 3328;
+            ushort actualSize = swrcs.ActualSizeRegs;   // включает nDichan*2 + 40
 
-            // swrEna
-            ushort value = Convert.ToUInt16(swrcs.swrEna ?? "0");
-            ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, num, value);
-
-            // swnf
-            ushort num2 = 3329;
-            ushort num3 = 0;
-            if (!ushort.TryParse(swrcs.swnf.Inn, out num3))
-                num3 = Convert.ToUInt16(swrcs.swnf.Inn ?? "0");
-            ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, num2, num3);
-
-            ushort value2 = Convert.ToUInt16(swrcs.swnf.Imax ?? "0");
-            ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, (ushort)(num2 + 1), value2);
-
-            // label – используем CP1251
-            ushort[] data = ModbusFunctionsHelper.ConvertStringToUshortArray(swrcs.swnf.label ?? "", 10);
-            Master.WriteMultipleRegisters(0, (ushort)(num2 + 2), data);
-
-            // model – используем CP1251
-            ushort[] data2 = ModbusFunctionsHelper.ConvertStringToUshortArray(swrcs.swnf.model ?? "", 32);
-            Master.WriteMultipleRegisters(0, (ushort)(num2 + 7), data2);
-
-            // algo
-            ushort num4 = 3352;
-            ushort num5 = 0;
-            if (!ushort.TryParse(swrcs.algo.Iotc, out num5))
-                num5 = Convert.ToUInt16(swrcs.algo.Iotc ?? "0");
-            ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, num4, num5);
-
-            ushort value3 = Convert.ToUInt16(swrcs.algo.Nn ?? "0");
-            ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, (ushort)(num4 + 1), value3);
-
-            float number = float.Parse(swrcs.algo.C1 ?? "0", CultureInfo.InvariantCulture);
-            ushort[] array = ModbusFunctionsHelper.ConvertFloatToUshortArray(number);
-            Array.Reverse(array);
-            Master.WriteMultipleRegisters(0, (ushort)(num4 + 2), array);
-
-            float number2 = float.Parse(swrcs.algo.C2 ?? "0", CultureInfo.InvariantCulture);
-            ushort[] array2 = ModbusFunctionsHelper.ConvertFloatToUshortArray(number2);
-            Array.Reverse(array2);
-            Master.WriteMultipleRegisters(0, (ushort)(num4 + 4), array2);
-
-            float number3 = float.Parse(swrcs.algo.C3 ?? "0", CultureInfo.InvariantCulture);
-            ushort[] array3 = ModbusFunctionsHelper.ConvertFloatToUshortArray(number3);
-            Array.Reverse(array3);
-            Master.WriteMultipleRegisters(0, (ushort)(num4 + 6), array3);
-
-            float number4 = float.Parse(swrcs.algo.C4 ?? "0", CultureInfo.InvariantCulture);
-            ushort[] array4 = ModbusFunctionsHelper.ConvertFloatToUshortArray(number4);
-            Array.Reverse(array4);
-            Master.WriteMultipleRegisters(0, (ushort)(num4 + 8), array4);
-
-            // contacts
-            ushort num6 = 3363;
-            ushort value4 = Convert.ToUInt16(swrcs.contacts.invmsk ?? "0");
-            ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, num6, value4);
-
-            short num7 = Convert.ToInt16(swrcs.contacts.ajtr.offd ?? "0");
-            short num8 = Convert.ToInt16(swrcs.contacts.ajtr.ond ?? "0");
-            Master.WriteMultipleRegisters(0, (ushort)(num6 + 3), new ushort[2]
+            // swrEna (регистр 0)
+            if (actualSize >= 1)
             {
-                ModbusFunctionsHelper.ConvertShortToUshort(num7),
-                ModbusFunctionsHelper.ConvertShortToUshort(num8)
-            });
+                ushort value = Convert.ToUInt16(string.IsNullOrEmpty(swrcs.swrEna) ? "0" : swrcs.swrEna);
+                ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, swrcsAddr, value);
+            }
 
-            ushort num9 = 0;
-            if (!string.IsNullOrEmpty(GeneralSettingsValues_TextFormat.cmns.nDichan))
+            // swnf.Inn (регистр 1)
+            if (actualSize >= 2)
             {
-                num9 = Convert.ToUInt16(GeneralSettingsValues_TextFormat.cmns.nDichan);
-                for (int i = 0; i < num9 && i < swrcs.contacts.cdly.Length; i++)
+                ushort Inn = Convert.ToUInt16(string.IsNullOrEmpty(swrcs.swnf.Inn) ? "0" : swrcs.swnf.Inn);
+                ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, (ushort)(swrcsAddr + 1), Inn);
+            }
+
+            // swnf.Imax (регистр 2)
+            if (actualSize >= 3)
+            {
+                ushort Imax = Convert.ToUInt16(string.IsNullOrEmpty(swrcs.swnf.Imax) ? "0" : swrcs.swnf.Imax);
+                ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, (ushort)(swrcsAddr + 2), Imax);
+            }
+
+            // swnf.label (5 регистров, начиная с 3)
+            if (actualSize >= 8)
+            {
+                ushort[] label = ModbusFunctionsHelper.ConvertStringToUshortArray(swrcs.swnf.label ?? "", 10);
+                Master.WriteMultipleRegisters(0, (ushort)(swrcsAddr + 3), label);
+            }
+
+            // swnf.model (16 регистров, начиная с 8)
+            if (actualSize >= 24)
+            {
+                ushort[] model = ModbusFunctionsHelper.ConvertStringToUshortArray(swrcs.swnf.model ?? "", 32);
+                Master.WriteMultipleRegisters(0, (ushort)(swrcsAddr + 8), model);
+            }
+
+            // algo (10 регистров, начиная с 24, т.е. абсолютный 3352)
+            if (actualSize >= 34)
+            {
+                ushort algoBase = 3352;
+                ushort Iotc = Convert.ToUInt16(string.IsNullOrEmpty(swrcs.algo.Iotc) ? "0" : swrcs.algo.Iotc);
+                ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, algoBase, Iotc);
+                ushort Nn = Convert.ToUInt16(string.IsNullOrEmpty(swrcs.algo.Nn) ? "0" : swrcs.algo.Nn);
+                ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, (ushort)(algoBase + 1), Nn);
+                float[] coeffs = new float[4] {
+            float.Parse(swrcs.algo.C1 ?? "0", CultureInfo.InvariantCulture),
+            float.Parse(swrcs.algo.C2 ?? "0", CultureInfo.InvariantCulture),
+            float.Parse(swrcs.algo.C3 ?? "0", CultureInfo.InvariantCulture),
+            float.Parse(swrcs.algo.C4 ?? "0", CultureInfo.InvariantCulture)
+        };
+                for (int i = 0; i < 4; i++)
                 {
-                    short num10 = swrcs.contacts.cdly[i].offd;
-                    short num11 = swrcs.contacts.cdly[i].ond;
-                    Master.WriteMultipleRegisters(0, (ushort)(num6 + 5 + i * 2), new ushort[2]
-                    {
-                        ModbusFunctionsHelper.ConvertShortToUshort(num10),
-                        ModbusFunctionsHelper.ConvertShortToUshort(num11)
-                    });
+                    ushort[] arr = ModbusFunctionsHelper.ConvertFloatToUshortArray(coeffs[i]);
+                    Array.Reverse(arr);
+                    Master.WriteMultipleRegisters(0, (ushort)(algoBase + 2 + i * 2), arr);
+                }
+            }
+
+            // contacts (начиная с 3363, смещение от swrcsAddr = 35)
+            ushort contactsBase = 3363;
+            int contactsOffset = contactsBase - swrcsAddr; // = 35
+
+            if (actualSize >= contactsOffset + 1) // invmsk
+            {
+                ushort invmsk = Convert.ToUInt16(string.IsNullOrEmpty(swrcs.contacts.invmsk) ? "0" : swrcs.contacts.invmsk);
+                ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, contactsBase, invmsk);
+            }
+
+            // maxdly (R) не пишем
+
+            // ajtr (2 регистра, начиная с 3366)
+            if (actualSize >= contactsOffset + 3)
+            {
+                short ajtr_offd = Convert.ToInt16(string.IsNullOrEmpty(swrcs.contacts.ajtr.offd) ? "0" : swrcs.contacts.ajtr.offd);
+                short ajtr_ond = Convert.ToInt16(string.IsNullOrEmpty(swrcs.contacts.ajtr.ond) ? "0" : swrcs.contacts.ajtr.ond);
+                Master.WriteMultipleRegisters(0, (ushort)(contactsBase + 3), new ushort[] {
+            ModbusFunctionsHelper.ConvertShortToUshort(ajtr_offd),
+            ModbusFunctionsHelper.ConvertShortToUshort(ajtr_ond)
+        });
+            }
+
+            // cdly (массив, начиная с 3368)
+            ushort nDichan = 0;
+            if (!string.IsNullOrEmpty(GeneralSettingsValues_TextFormat.cmns.nDichan))
+                nDichan = Convert.ToUInt16(GeneralSettingsValues_TextFormat.cmns.nDichan);
+            int cdlyStart = contactsOffset + 5; // = 40
+            if (actualSize >= cdlyStart + nDichan * 2)
+            {
+                for (int i = 0; i < nDichan && i < swrcs.contacts.cdly.Length; i++)
+                {
+                    short offd = swrcs.contacts.cdly[i].offd;
+                    short ond = swrcs.contacts.cdly[i].ond;
+                    Master.WriteMultipleRegisters(0, (ushort)(contactsBase + 5 + i * 2), new ushort[] {
+                ModbusFunctionsHelper.ConvertShortToUshort(offd),
+                ModbusFunctionsHelper.ConvertShortToUshort(ond)
+            });
                 }
             }
         }

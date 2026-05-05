@@ -316,6 +316,7 @@ namespace ModBusHelper
             else txt.nets.ips.name = "";
 
             // time
+            txt.time.ActualSizeRegs = raw.time.ActualSizeRegs;
             txt.time.ptpval.ns = raw.time.ptpval.ns.ToString() ?? "";
             txt.time.ptpval.slo = raw.time.ptpval.slo.ToString() ?? "";
             txt.time.ptsecHi = raw.time.ptsecHi.ToString() ?? "";
@@ -361,6 +362,7 @@ namespace ModBusHelper
             txt.nets.gss.sml = raw.nets.gss.sml.ToString();
 
             // syns
+            txt.syns.ActualSizeRegs = raw.syns.ActualSizeRegs;
             txt.syns.sevOfs = raw.syns.sevOfs.ToString() ?? "";
             txt.syns.ptps.acv = raw.syns.ptps.acv.ToString() ?? "";
             txt.syns.ptps.ofthi = raw.syns.ptps.ofthi.ToString() ?? "";
@@ -380,6 +382,7 @@ namespace ModBusHelper
             txt.syns.umscm = raw.syns.umscm.ToString() ?? "";
 
             // swrcs
+            txt.swrcs.ActualSizeRegs = raw.swrcs.ActualSizeRegs;
             txt.swrcs.swrEna = raw.swrcs.swrEna.ToString() ?? "";
             txt.swrcs.swnf.Inn = raw.swrcs.swnf.Inn.ToString() ?? "";
             txt.swrcs.swnf.Imax = raw.swrcs.swnf.Imax.ToString() ?? "";
