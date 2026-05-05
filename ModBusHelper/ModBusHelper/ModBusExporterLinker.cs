@@ -452,8 +452,13 @@ namespace ModBusHelper
             try
             {
                 ModBusCommands commands = new ModBusCommands();
-                // Отправляем команду перезагрузки. Не ждём ответа, так как устройство закроет соединение.
+                // Отправляем команду перезагрузки (0x0100 – записать и перезагрузить)
                 commands.upload_settings(master, 0x0100);
+
+                // Немедленно закрываем соединение, чтобы не ждать ответа,
+                // который не придёт из-за перезагрузки устройства.
+                connection.Item1.Close();
+
                 WasRebootCommandSent = true;
             }
             catch (Exception ex)
