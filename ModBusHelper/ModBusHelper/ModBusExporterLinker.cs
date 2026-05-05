@@ -30,6 +30,7 @@ namespace ModBusHelper
             public string ZdRowInx;
             public string eh_cnt_res;
             public string dog_cnt_res;
+            public ushort ActualSizeRegs;
         }
 
         public struct svs_TextFormat
@@ -70,6 +71,7 @@ namespace ModBusHelper
             public svs_TextFormat svs;
             public gss_TextFormat gss;
             public bool gssSupported;
+            public ushort ActualSizeRegs;
         }
 
         public struct primct_TextFormat
@@ -111,6 +113,7 @@ namespace ModBusHelper
             public string adc_osf;               
             public verif_TextFormat verif;     
             public qb_TextFormat qb;
+            public ushort ActualSizeRegs;
         }
 
         public struct id_TextFormat
@@ -140,6 +143,7 @@ namespace ModBusHelper
             public string lmscm;
             public string umscm;
             public string[] res;
+            public ushort ActualSizeRegs;
         }
 
         public struct ptpval_TextFormat
@@ -153,6 +157,7 @@ namespace ModBusHelper
             public ptpval_TextFormat ptpval;
             public string ptsecHi;
             public byte[] opts;
+            public ushort ActualSizeRegs;
         }
 
         public struct SCDLY_TextFormat
@@ -200,6 +205,7 @@ namespace ModBusHelper
             public algo_TextFormat algo;
             public string jrnvol;
             public contacts_TextFormat contacts;
+            public ushort ActualSizeRegs;
         }
 
         public struct accor_TextFormat
@@ -254,6 +260,7 @@ namespace ModBusHelper
             GeneralSettings_TextFormat txt = new GeneralSettings_TextFormat();
 
             // cmns
+            txt.cmns.ActualSizeRegs = raw.cmns.ActualSizeRegs;
             txt.cmns.SerialNo = raw.cmns.SerialNo.ToString() ?? "";
             txt.cmns.FmwVer = raw.cmns.FmwVer.ToString() ?? "";
             if (raw.cmns.SubStNo != null)
@@ -277,6 +284,7 @@ namespace ModBusHelper
             txt.cmns.dog_cnt_res = raw.cmns.dog_cnt_res.ToString() ?? "0";
 
             // nets
+            txt.nets.ActualSizeRegs = raw.nets.ActualSizeRegs;
             txt.nets.ownAddr = raw.nets.ownAddr ?? new byte[0];
             txt.nets.mbport = raw.nets.mbport.ToString() ?? "";
             txt.nets.svs.cfgRev = raw.nets.svs.cfgRev.ToString() ?? "";
@@ -314,6 +322,7 @@ namespace ModBusHelper
             txt.time.opts = raw.time.opts ?? new byte[0];
 
             // meas
+            txt.meas.ActualSizeRegs = raw.meas.ActualSizeRegs;
             txt.meas.primct.Inom1 = raw.meas.primct.Inom1.ToString() ?? "";
             txt.meas.primct.Inom2 = raw.meas.primct.Inom2.ToString() ?? "";
             if (raw.meas.primct.label != null)
