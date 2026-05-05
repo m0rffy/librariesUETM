@@ -2,7 +2,9 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Net.Sockets;
+using static ModBusHelper.ModBusExporterLinker;
 using static ModBusHelper.ModBusProfile;
 
 
@@ -66,6 +68,8 @@ namespace ModBusHelper
             public string mbport;
             public ips_TextFormat ips;
             public svs_TextFormat svs;
+            public gss_TextFormat gss;
+            public bool gssSupported;
         }
 
         public struct primct_TextFormat
@@ -73,6 +77,26 @@ namespace ModBusHelper
             public string Inom1;
             public string Inom2;
             public string label;
+        }
+
+        public struct verif_TextFormat
+        {
+            public string next_verif;
+            public string verif_st;
+        }
+        public struct qb_TextFormat
+        {
+            public string method_oor;
+            public string out_of_range;
+            public string delta_od;
+            public string repl_smps_od;
+            public string min_lev_od;
+            public string delta_osc;
+            public string repl_smps_osc;
+            public string min_lev_osc;
+            public string imbal_lev;
+            public string qb_mod;
+            public string[] qb_msk;  // массив строк
         }
 
         public struct meas_TextFormat
@@ -84,8 +108,9 @@ namespace ModBusHelper
             public string adcrng;
             public string aStart;
             public string aStop;
-            public string next_verif;
-            public string verif_st;
+            public string adc_osf;               
+            public verif_TextFormat verif;     
+            public qb_TextFormat qb;
         }
 
         public struct id_TextFormat
@@ -195,6 +220,23 @@ namespace ModBusHelper
             public accor_TextFormat accor;
         }
 
+        public struct gss_dstAddr_TextFormat
+        {
+            public byte[] dstMAC;
+            public string appID;
+            public string VID;
+            public string Prio;
+        }
+
+        public struct gss_TextFormat
+        {
+            public string cfgRev;
+            public gss_dstAddr_TextFormat dstAddr;
+            public string sml;
+            public string brmode;
+        }
+
+
         // ========================== МЕТОДЫ ==========================
 
 
@@ -274,7 +316,6 @@ namespace ModBusHelper
             // meas
             txt.meas.primct.Inom1 = raw.meas.primct.Inom1.ToString() ?? "";
             txt.meas.primct.Inom2 = raw.meas.primct.Inom2.ToString() ?? "";
-            // label – CP1251
             if (raw.meas.primct.label != null)
                 txt.meas.primct.label = ModbusFunctionsHelper.ConvertByteArrayToString(raw.meas.primct.label).Replace("\0", "");
             else txt.meas.primct.label = "";
@@ -284,8 +325,31 @@ namespace ModBusHelper
             txt.meas.adcrng = raw.meas.adcrng.ToString() ?? "";
             txt.meas.aStart = raw.meas.aStart.ToString() ?? "";
             txt.meas.aStop = raw.meas.aStop.ToString() ?? "";
-            txt.meas.next_verif = raw.meas.next_verif.ToString() ?? "0";
-            txt.meas.verif_st = raw.meas.verif_st.ToString() ?? "0";
+            txt.meas.adc_osf = raw.meas.adc_osf.ToString();
+
+            // verif
+            txt.meas.verif.next_verif = raw.meas.verif.next_verif.ToString();
+            txt.meas.verif.verif_st = raw.meas.verif.verif_st.ToString();
+
+            // qb
+            txt.meas.qb.method_oor = raw.meas.qb.method_oor.ToString();
+            txt.meas.qb.out_of_range = FormatFloatNoExponent(raw.meas.qb.out_of_range);
+            txt.meas.qb.delta_od = FormatFloatNoExponent(raw.meas.qb.delta_od);
+            txt.meas.qb.repl_smps_od = raw.meas.qb.repl_smps_od.ToString();
+            txt.meas.qb.min_lev_od = FormatFloatNoExponent(raw.meas.qb.min_lev_od);
+            txt.meas.qb.delta_osc = FormatFloatNoExponent(raw.meas.qb.delta_osc);
+            txt.meas.qb.repl_smps_osc = raw.meas.qb.repl_smps_osc.ToString();
+            txt.meas.qb.min_lev_osc = FormatFloatNoExponent(raw.meas.qb.min_lev_osc);
+            txt.meas.qb.imbal_lev = FormatFloatNoExponent(raw.meas.qb.imbal_lev);
+            txt.meas.qb.qb_mod = raw.meas.qb.qb_mod.ToString();
+            txt.meas.qb.qb_msk = raw.meas.qb.qb_msk?.Select(v => v.ToString()).ToArray() ?? new string[0];
+
+            txt.nets.gss.cfgRev = raw.nets.gss.cfgRev.ToString();
+            txt.nets.gss.dstAddr.dstMAC = raw.nets.gss.dstAddr.dstMAC ?? new byte[0];
+            txt.nets.gss.dstAddr.appID = raw.nets.gss.dstAddr.appID.ToString();
+            txt.nets.gss.dstAddr.VID = raw.nets.gss.dstAddr.VID.ToString();
+            txt.nets.gss.dstAddr.Prio = raw.nets.gss.dstAddr.Prio.ToString();
+            txt.nets.gss.sml = raw.nets.gss.sml.ToString();
 
             // syns
             txt.syns.sevOfs = raw.syns.sevOfs.ToString() ?? "";

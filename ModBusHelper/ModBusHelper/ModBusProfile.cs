@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using static ModBusHelper.ModBusExporterLinker;
 
@@ -64,12 +65,30 @@ namespace ModBusHelper
             public byte[] name;
         }
 
+        public struct gss_dstAddr
+        {
+            public byte[] dstMAC;
+            public ushort appID;
+            public ushort VID;
+            public ushort Prio;
+        }
+
+        public struct gss
+        {
+            public uint cfgRev;
+            public gss_dstAddr dstAddr;
+            public ushort sml;
+            public ushort brmode;
+        }
+
         public struct nets
         {
             public byte[] ownAddr;
             public ushort mbport;
             public ips ips;
             public svs svs;
+            public gss gss;
+            public bool gssSupported;
         }
 
         public struct primct
@@ -88,8 +107,30 @@ namespace ModBusHelper
             public ushort adcrng;
             public byte aStart;
             public byte aStop;
+            public uint adc_osf;          // новое
+            public verif verif;           // новое (заменяем разрозненные next_verif/verif_st)
+            public qb qb;
+        }
+
+        public struct verif
+        {
             public uint next_verif;
             public ushort verif_st;
+        }
+
+        public struct qb
+        {
+            public ushort method_oor;
+            public float out_of_range;
+            public float delta_od;
+            public ushort repl_smps_od;
+            public float min_lev_od;
+            public float delta_osc;
+            public ushort repl_smps_osc;
+            public float min_lev_osc;
+            public float imbal_lev;
+            public ushort qb_mod;
+            public ushort[] qb_msk;   // зависит от nAchans, сейчас nAchans=4, размер 4 ushort = 8 байт
         }
 
         public struct ptps
@@ -225,88 +266,227 @@ namespace ModBusHelper
         public nets nets_Read(IModbusMaster Master)
         {
             ushort addr = 2304;
-            ushort mbrsz = 52;
-            ushort[] data = Master.ReadHoldingRegisters(0, addr, mbrsz);
+            ushort[] data = null;
+            bool fullSizeRead = false;
+
+            try
+            {
+                // Полный размер с gss (62 регистра)
+                data = Master.ReadHoldingRegisters(0, addr, 62);
+                fullSizeRead = true;
+            }
+            catch (Exception ex)
+            {
+                if (ex.Message.Contains("Unexpected byte count") ||
+                    ex.Message.Contains("Invalid data length") ||
+                    ex.Message.Contains("illegal data") ||
+                    ex is IOException)
+                {
+                    data = Master.ReadHoldingRegisters(0, addr, 52);
+                    fullSizeRead = false;
+                }
+                else throw;
+            }
+
             nets netsValues = new nets();
 
-            // ownAddr (3 регистра)
+            // ownAddr (0-2)
             ushort[] ownRegs = new ushort[3];
             Array.Copy(data, 0, ownRegs, 0, 3);
             netsValues.ownAddr = ModbusFunctionsHelper.ConvertUshortArrayToBytes(ownRegs);
             netsValues.mbport = data[3];
 
-            // ips (регистры 4-19)
+            // ips (4-19)
             ushort ipsOffset = 4;
-            ushort[] ipMaskRegs = new ushort[2];
-            Array.Copy(data, ipsOffset, ipMaskRegs, 0, 2);
-            netsValues.ips.ipMask = ModbusFunctionsHelper.ConvertUshortArrayToBytes(ipMaskRegs);
-            ushort[] gateRegs = new ushort[2];
-            Array.Copy(data, ipsOffset + 2, gateRegs, 0, 2);
-            netsValues.ips.GateWay = ModbusFunctionsHelper.ConvertUshortArrayToBytes(gateRegs);
-            ushort[] ipAddrRegs = new ushort[2];
-            Array.Copy(data, ipsOffset + 4, ipAddrRegs, 0, 2);
-            netsValues.ips.ipAddr = ModbusFunctionsHelper.ConvertUshortArrayToBytes(ipAddrRegs);
-            ushort[] optsRegs = new ushort[2];
-            Array.Copy(data, ipsOffset + 6, optsRegs, 0, 2);
-            netsValues.ips.opts = ModbusFunctionsHelper.ConvertUshortArrayToBytes(optsRegs);
-            ushort[] nameRegs = new ushort[8];
-            Array.Copy(data, ipsOffset + 8, nameRegs, 0, 8);
-            netsValues.ips.name = ModbusFunctionsHelper.ConvertUshortArrayToBytes(nameRegs);
+            {
+                ushort[] ipMaskRegs = new ushort[2];
+                Array.Copy(data, ipsOffset, ipMaskRegs, 0, 2);
+                netsValues.ips.ipMask = ModbusFunctionsHelper.ConvertUshortArrayToBytes(ipMaskRegs);
+                ushort[] gateRegs = new ushort[2];
+                Array.Copy(data, ipsOffset + 2, gateRegs, 0, 2);
+                netsValues.ips.GateWay = ModbusFunctionsHelper.ConvertUshortArrayToBytes(gateRegs);
+                ushort[] ipAddrRegs = new ushort[2];
+                Array.Copy(data, ipsOffset + 4, ipAddrRegs, 0, 2);
+                netsValues.ips.ipAddr = ModbusFunctionsHelper.ConvertUshortArrayToBytes(ipAddrRegs);
+                ushort[] optsRegs = new ushort[2];
+                Array.Copy(data, ipsOffset + 6, optsRegs, 0, 2);
+                netsValues.ips.opts = ModbusFunctionsHelper.ConvertUshortArrayToBytes(optsRegs);
+                ushort[] nameRegs = new ushort[8];
+                Array.Copy(data, ipsOffset + 8, nameRegs, 0, 8);
+                netsValues.ips.name = ModbusFunctionsHelper.ConvertUshortArrayToBytes(nameRegs);
+            }
 
-            // svs (регистры 20-51)
+            // svs (20-45 старые, 20-51 новые)
             ushort svsOffset = 20;
             netsValues.svs.cfgRev = ModbusFunctionsHelper.GetUInt32(data[svsOffset], data[svsOffset + 1]);
 
             ushort dstOffset = 22;
-            ushort[] dstMacRegs = new ushort[3];
-            Array.Copy(data, dstOffset, dstMacRegs, 0, 3);
-            netsValues.svs.dstAddr.dstMAC = ModbusFunctionsHelper.ConvertUshortArrayToBytes(dstMacRegs);
-            netsValues.svs.dstAddr.appID = data[dstOffset + 3];
-            netsValues.svs.dstAddr.VID = data[dstOffset + 4];
-            netsValues.svs.dstAddr.Prio = data[dstOffset + 5];
+            {
+                ushort[] dstMacRegs = new ushort[3];
+                Array.Copy(data, dstOffset, dstMacRegs, 0, 3);
+                netsValues.svs.dstAddr.dstMAC = ModbusFunctionsHelper.ConvertUshortArrayToBytes(dstMacRegs);
+                netsValues.svs.dstAddr.appID = data[dstOffset + 3];
+                netsValues.svs.dstAddr.VID = data[dstOffset + 4];
+                netsValues.svs.dstAddr.Prio = data[dstOffset + 5];
+            }
 
             ushort sNameOffset = 28;
-            ushort[] sNameRegs = new ushort[18];
-            Array.Copy(data, sNameOffset, sNameRegs, 0, 18);
-            netsValues.svs.sName = ModbusFunctionsHelper.ConvertUshortArrayToBytes(sNameRegs);
+            {
+                ushort[] sNameRegs = new ushort[18];
+                Array.Copy(data, sNameOffset, sNameRegs, 0, 18);
+                netsValues.svs.sName = ModbusFunctionsHelper.ConvertUshortArrayToBytes(sNameRegs);
+            }
 
-            // Новые поля SV: регистры 2350-2355 (смещения 46-51)
-            ushort newFieldsOffset = (ushort)(svsOffset + 0x18); // 20+24=44? wait, correct: 20 + 0x1A = 20+26 = 46
-            // Actually: sName occupies 18 registers (28..45), so new fields start at 46.
-            newFieldsOffset = (ushort)(sNameOffset + 18); // 28+18 = 46
-            netsValues.svs.nspp = data[newFieldsOffset];          // 2350
-            netsValues.svs.nasdu = data[newFieldsOffset + 1];     // 2351
-            ushort packed = data[newFieldsOffset + 2];            // 2352
-            netsValues.svs.nsig = (byte)(packed >> 8);
-            netsValues.svs.nasdu_IU = (byte)(packed & 0xFF);
-            ushort packed2 = data[newFieldsOffset + 3];           // 2353
-            netsValues.svs.gmidentity_ena = (byte)(packed2 >> 8);
-            netsValues.svs.smprate_ena = (byte)(packed2 & 0xFF);
+            if (fullSizeRead)
+            {
+                // Новые поля SV (46-51)
+                netsValues.svs.nspp = data[46];
+                netsValues.svs.nasdu = data[47];
+                netsValues.svs.nsig = (byte)(data[48] & 0xFF);
+                netsValues.svs.nasdu_IU = (byte)(data[49] & 0xFF);
+                netsValues.svs.gmidentity_ena = (byte)(data[50] & 0xFF);
+                netsValues.svs.smprate_ena = (byte)(data[51] & 0xFF);
+
+                // gss (52-61)
+                ushort gssOffset = 52;
+                netsValues.gss.cfgRev = ModbusFunctionsHelper.GetUInt32(data[gssOffset], data[gssOffset + 1]);
+                {
+                    ushort[] gssDstMacRegs = new ushort[3];
+                    Array.Copy(data, gssOffset + 2, gssDstMacRegs, 0, 3);
+                    netsValues.gss.dstAddr.dstMAC = ModbusFunctionsHelper.ConvertUshortArrayToBytes(gssDstMacRegs);
+                }
+                netsValues.gss.dstAddr.appID = data[gssOffset + 5];
+                netsValues.gss.dstAddr.VID = data[gssOffset + 6];
+                netsValues.gss.dstAddr.Prio = data[gssOffset + 7];
+                netsValues.gss.sml = data[gssOffset + 8];
+                netsValues.gss.brmode = data[gssOffset + 9];   // новый регистр 61
+
+                netsValues.gssSupported = true;
+            }
+            else
+            {
+                // Значения по умолчанию для отсутствующих полей
+                netsValues.svs.nspp = 0;
+                netsValues.svs.nasdu = 0;
+                netsValues.svs.nsig = 0;
+                netsValues.svs.nasdu_IU = 0;
+                netsValues.svs.gmidentity_ena = 0;
+                netsValues.svs.smprate_ena = 0;
+
+                netsValues.gss.cfgRev = 0;
+                netsValues.gss.dstAddr.dstMAC = new byte[6];
+                netsValues.gss.dstAddr.appID = 0;
+                netsValues.gss.dstAddr.VID = 0;
+                netsValues.gss.dstAddr.Prio = 0;
+                netsValues.gss.sml = 0;
+                netsValues.gss.brmode = 0;
+                netsValues.gssSupported = false;
+            }
 
             return netsValues;
         }
 
+        // ========== meas_Read (чтение полного размера) ==========
         public meas meas_Read(IModbusMaster Master)
         {
             ushort addr = 3584;
-            ushort mbrsz = 30;
-            ushort[] data = Master.ReadHoldingRegisters(0, addr, mbrsz);
+            ushort[] data = null;
+
+            // Пытаемся прочитать 37 регистров (новая прошивка)
+            try
+            {
+                data = Master.ReadHoldingRegisters(0, addr, 37);
+            }
+            catch (Exception ex)
+            {
+                // Если ошибка размера, откатываемся на 30 регистров (старая прошивка)
+                if (ex.Message.Contains("Unexpected byte count") ||
+                    ex.Message.Contains("Invalid data length") ||
+                    ex.Message.Contains("illegal data") ||
+                    ex is IOException)
+                {
+                    data = Master.ReadHoldingRegisters(0, addr, 30);
+                }
+                else throw;
+            }
+
             meas measValues = new meas();
 
+            // ----- primct (первичный датчик) -----
             measValues.primct.Inom1 = data[0];          // регистр 3584
             measValues.primct.Inom2 = data[1];          // регистр 3585
             ushort[] labelRegs = new ushort[4];
-            Array.Copy(data, 2, labelRegs, 0, 4);
+            Array.Copy(data, 2, labelRegs, 0, 4);       // регистры 3586–3589
             measValues.primct.label = ModbusFunctionsHelper.ConvertUshortArrayToBytes(labelRegs);
-            measValues.Rsh = ModbusFunctionsHelper.GetSingle(data[6], data[7]);
-            measValues.sscle = data[8];
-            measValues.Nturns = data[9];
-            measValues.adcrng = data[10];
-            byte[] aBytes = BitConverter.GetBytes(data[11]);
+
+            // ----- Rsh (сопротивление шунта) -----
+            measValues.Rsh = ModbusFunctionsHelper.GetSingle(data[6], data[7]); // 3590–3591
+
+            // ----- масштаб, витки, предел АЦП -----
+            measValues.sscle = data[8];                 // 3592
+            measValues.Nturns = data[9];                // 3593
+            measValues.adcrng = data[10];               // 3594
+
+            // ----- aStart / aStop (упакованы в один регистр) -----
+            byte[] aBytes = BitConverter.GetBytes(data[11]); // 3595
             measValues.aStart = aBytes[0];
             measValues.aStop = aBytes[1];
-            measValues.next_verif = ModbusFunctionsHelper.GetUInt32(data[12], data[13]);
-            measValues.verif_st = data[14];
+
+            // ----- adc_osf (новое поле) -----
+            if (data.Length > 12)
+                measValues.adc_osf = ModbusFunctionsHelper.GetUInt32(data[12], data[13]); // 3596–3597
+            else
+                measValues.adc_osf = 0;
+
+            // ----- verif (поверка) -----
+            if (data.Length > 14)
+            {
+                measValues.verif.next_verif = ModbusFunctionsHelper.GetUInt32(data[14], data[15]); // 3598–3599
+                measValues.verif.verif_st = data[16];       // 3600
+            }
+            else
+            {
+                measValues.verif.next_verif = 0;
+                measValues.verif.verif_st = 0;
+            }
+
+            // ----- qb (биты качества) -----
+            if (data.Length >= 34)   // есть все поля qb
+            {
+                measValues.qb.method_oor = data[17];        // 3601
+                measValues.qb.out_of_range = ModbusFunctionsHelper.GetSingle(data[18], data[19]); // 3602–3603
+
+                measValues.qb.repl_smps_od = data[20];      // 3604
+                measValues.qb.delta_od = ModbusFunctionsHelper.GetSingle(data[21], data[22]); // 3605–3606
+                measValues.qb.min_lev_od = ModbusFunctionsHelper.GetSingle(data[23], data[24]); // 3607–3608
+
+                measValues.qb.repl_smps_osc = data[25];     // 3609
+                measValues.qb.delta_osc = ModbusFunctionsHelper.GetSingle(data[26], data[27]); // 3610–3611
+                measValues.qb.min_lev_osc = ModbusFunctionsHelper.GetSingle(data[28], data[29]); // 3612–3613
+
+                measValues.qb.imbal_lev = ModbusFunctionsHelper.GetSingle(data[30], data[31]); // 3614–3615
+                measValues.qb.qb_mod = data[32];            // 3616
+
+                // qb_msk – массив из 4-х ushort
+                ushort[] qbMsk = new ushort[4];
+                Array.Copy(data, 33, qbMsk, 0, 4);          // 3617–3620
+                measValues.qb.qb_msk = qbMsk;
+            }
+            else
+            {
+                // Значения по умолчанию для отсутствующих полей qb
+                measValues.qb.method_oor = 0;
+                measValues.qb.out_of_range = 0f;
+                measValues.qb.repl_smps_od = 0;
+                measValues.qb.delta_od = 0f;
+                measValues.qb.min_lev_od = 0f;
+                measValues.qb.repl_smps_osc = 0;
+                measValues.qb.delta_osc = 0f;
+                measValues.qb.min_lev_osc = 0f;
+                measValues.qb.imbal_lev = 0f;
+                measValues.qb.qb_mod = 0;
+                measValues.qb.qb_msk = new ushort[4];
+            }
 
             return measValues;
         }
@@ -652,68 +832,99 @@ namespace ModBusHelper
         public void nets_Write(IModbusMaster Master, GeneralSettings_TextFormat GeneralSettingsValues_TextFormat, bool AdminRights)
         {
             nets_TextFormat netsValues_TextFormat = GeneralSettingsValues_TextFormat.nets;
+            bool writeGss = netsValues_TextFormat.gssSupported;
 
             ushort addr = 2304;
 
-            // ownAddr (без изменений)
-            ushort ownAddrOffset = 0x00;
-            ushort[] ownAddr = ModbusFunctionsHelper.ConvertByteArrayToUShortArray(netsValues_TextFormat.ownAddr ?? new byte[6], true);
-            Master.WriteMultipleRegisters(0, (ushort)(addr + ownAddrOffset), ownAddr);
+            // ownAddr (0-2)
+            ushort[] ownAddr = ModbusFunctionsHelper.ConvertByteArrayToUShortArray(
+                netsValues_TextFormat.ownAddr ?? new byte[6], true);
+            Master.WriteMultipleRegisters(0, addr, ownAddr);
 
-            // mbport (без изменений)
-            ushort mbportOffset = 0x03;
-            ushort mbport = Convert.ToUInt16(netsValues_TextFormat.mbport);
-            ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, (ushort)(addr + mbportOffset), mbport);
+            // mbport (3)
+            ushort mbport = Convert.ToUInt16(string.IsNullOrEmpty(netsValues_TextFormat.mbport) ? "502" : netsValues_TextFormat.mbport);
+            ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, (ushort)(addr + 3), mbport);
 
-            // ips (без изменений)
+            // ips (4-19)
             ushort ipsaddr = 2308;
-            ushort[] ipMask = ModbusFunctionsHelper.ConvertByteArrayToUShortArray(netsValues_TextFormat.ips.ipMask ?? new byte[4], true);
-            Master.WriteMultipleRegisters(0, (ushort)(ipsaddr + 0x00), ipMask);
-            ushort[] GateWay = ModbusFunctionsHelper.ConvertByteArrayToUShortArray(netsValues_TextFormat.ips.GateWay ?? new byte[4], true);
-            Master.WriteMultipleRegisters(0, (ushort)(ipsaddr + 0x02), GateWay);
-            ushort[] ipAddr = ModbusFunctionsHelper.ConvertByteArrayToUShortArray(netsValues_TextFormat.ips.ipAddr ?? new byte[4], true);
-            Master.WriteMultipleRegisters(0, (ushort)(ipsaddr + 0x04), ipAddr);
-            ushort[] opts = ModbusFunctionsHelper.ConvertByteArrayToUShortArray(netsValues_TextFormat.ips.opts ?? new byte[4], true);
-            Master.WriteMultipleRegisters(0, (ushort)(ipsaddr + 0x06), opts);
-            // name – используем CP1251
-            ushort[] name = ModbusFunctionsHelper.ConvertStringToUshortArray(netsValues_TextFormat.ips.name ?? "", 16);
-            Master.WriteMultipleRegisters(0, (ushort)(ipsaddr + 0x08), name);
+            {
+                ushort[] ipMask = ModbusFunctionsHelper.ConvertByteArrayToUShortArray(
+                    netsValues_TextFormat.ips.ipMask ?? new byte[4], true);
+                Master.WriteMultipleRegisters(0, ipsaddr, ipMask);
+                ushort[] GateWay = ModbusFunctionsHelper.ConvertByteArrayToUShortArray(
+                    netsValues_TextFormat.ips.GateWay ?? new byte[4], true);
+                Master.WriteMultipleRegisters(0, (ushort)(ipsaddr + 2), GateWay);
+                ushort[] ipAddr = ModbusFunctionsHelper.ConvertByteArrayToUShortArray(
+                    netsValues_TextFormat.ips.ipAddr ?? new byte[4], true);
+                Master.WriteMultipleRegisters(0, (ushort)(ipsaddr + 4), ipAddr);
+                ushort[] opts = ModbusFunctionsHelper.ConvertByteArrayToUShortArray(
+                    netsValues_TextFormat.ips.opts ?? new byte[4], true);
+                Master.WriteMultipleRegisters(0, (ushort)(ipsaddr + 6), opts);
+                ushort[] name = ModbusFunctionsHelper.ConvertStringToUshortArray(
+                    netsValues_TextFormat.ips.name ?? "", 16);
+                Master.WriteMultipleRegisters(0, (ushort)(ipsaddr + 8), name);
+            }
 
-            // svs
+            // svs (20-51)
             ushort svsaddr = 2324;
-            ushort[] cfgRev = ModbusFunctionsHelper.ConvertUintToUshortArray(UInt32.Parse(netsValues_TextFormat.svs.cfgRev ?? "0"));
-            Array.Reverse(cfgRev);
-            Master.WriteMultipleRegisters(0, (ushort)(svsaddr + 0x00), cfgRev);
+            {
+                ushort[] cfgRev = ModbusFunctionsHelper.ConvertUintToUshortArray(
+                    UInt32.Parse(string.IsNullOrEmpty(netsValues_TextFormat.svs.cfgRev) ? "0" : netsValues_TextFormat.svs.cfgRev));
+                Array.Reverse(cfgRev);
+                Master.WriteMultipleRegisters(0, svsaddr, cfgRev);
 
-            ushort dstAddraddr = 2326;
-            ushort[] dstMAC = ModbusFunctionsHelper.ConvertByteArrayToUShortArray(netsValues_TextFormat.svs.dstAddr.dstMAC ?? new byte[6], true);
-            Master.WriteMultipleRegisters(0, (ushort)(dstAddraddr + 0x00), dstMAC);
-            ushort appID = Convert.ToUInt16(netsValues_TextFormat.svs.dstAddr.appID ?? "0");
-            ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, (ushort)(dstAddraddr + 0x03), appID);
-            ushort VID = Convert.ToUInt16(netsValues_TextFormat.svs.dstAddr.VID ?? "0");
-            ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, (ushort)(dstAddraddr + 0x04), VID);
-            ushort Prio = Convert.ToUInt16(netsValues_TextFormat.svs.dstAddr.Prio ?? "0");
-            ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, (ushort)(dstAddraddr + 0x05), Prio);
+                ushort dstAddraddr = 2326;
+                ushort[] dstMAC = ModbusFunctionsHelper.ConvertByteArrayToUShortArray(
+                    netsValues_TextFormat.svs.dstAddr.dstMAC ?? new byte[6], true);
+                Master.WriteMultipleRegisters(0, dstAddraddr, dstMAC);
+                ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, (ushort)(dstAddraddr + 3),
+                    Convert.ToUInt16(string.IsNullOrEmpty(netsValues_TextFormat.svs.dstAddr.appID) ? "0" : netsValues_TextFormat.svs.dstAddr.appID));
+                ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, (ushort)(dstAddraddr + 4),
+                    Convert.ToUInt16(string.IsNullOrEmpty(netsValues_TextFormat.svs.dstAddr.VID) ? "0" : netsValues_TextFormat.svs.dstAddr.VID));
+                ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, (ushort)(dstAddraddr + 5),
+                    Convert.ToUInt16(string.IsNullOrEmpty(netsValues_TextFormat.svs.dstAddr.Prio) ? "0" : netsValues_TextFormat.svs.dstAddr.Prio));
 
-            // sName – используем CP1251
-            ushort sNameOffset = 0x08;
-            ushort[] sName = ModbusFunctionsHelper.ConvertStringToUshortArray(netsValues_TextFormat.svs.sName ?? "", 36);
-            Master.WriteMultipleRegisters(0, (ushort)(svsaddr + sNameOffset), sName);
+                ushort[] sName = ModbusFunctionsHelper.ConvertStringToUshortArray(
+                    netsValues_TextFormat.svs.sName ?? "", 36);
+                Master.WriteMultipleRegisters(0, (ushort)(svsaddr + 8), sName);
 
-            // Новые поля SV (без изменений)
-            ushort newFieldsAddr = (ushort)(svsaddr + 0x1A);
-            ushort nspp = Convert.ToUInt16(netsValues_TextFormat.svs.nspp ?? "0");
-            ushort nasdu = Convert.ToUInt16(netsValues_TextFormat.svs.nasdu ?? "0");
-            byte nsig = Convert.ToByte(netsValues_TextFormat.svs.nsig ?? "0");
-            byte nasdu_IU = Convert.ToByte(netsValues_TextFormat.svs.nasdu_IU ?? "0");
-            byte gmidentity_ena = Convert.ToByte(netsValues_TextFormat.svs.gmidentity_ena ?? "0");
-            byte smprate_ena = Convert.ToByte(netsValues_TextFormat.svs.smprate_ena ?? "0");
-            ushort packed = (ushort)((nsig << 8) | nasdu_IU);
-            ushort packed2 = (ushort)((gmidentity_ena << 8) | smprate_ena);
-            ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, (ushort)(newFieldsAddr), nspp);
-            ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, (ushort)(newFieldsAddr + 1), nasdu);
-            ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, (ushort)(newFieldsAddr + 2), packed);
-            ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, (ushort)(newFieldsAddr + 3), packed2);
+                if (writeGss)
+                {
+                    // Новые поля SV (46-51)
+                    ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, 2350,
+                        Convert.ToUInt16(string.IsNullOrEmpty(netsValues_TextFormat.svs.nspp) ? "0" : netsValues_TextFormat.svs.nspp));
+                    ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, 2351,
+                        Convert.ToUInt16(string.IsNullOrEmpty(netsValues_TextFormat.svs.nasdu) ? "0" : netsValues_TextFormat.svs.nasdu));
+                    ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, 2352,
+                        Convert.ToUInt16(string.IsNullOrEmpty(netsValues_TextFormat.svs.nsig) ? "0" : netsValues_TextFormat.svs.nsig));
+                    ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, 2353,
+                        Convert.ToUInt16(string.IsNullOrEmpty(netsValues_TextFormat.svs.nasdu_IU) ? "0" : netsValues_TextFormat.svs.nasdu_IU));
+                    ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, 2354,
+                        Convert.ToUInt16(string.IsNullOrEmpty(netsValues_TextFormat.svs.gmidentity_ena) ? "0" : netsValues_TextFormat.svs.gmidentity_ena));
+                    ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, 2355,
+                        Convert.ToUInt16(string.IsNullOrEmpty(netsValues_TextFormat.svs.smprate_ena) ? "0" : netsValues_TextFormat.svs.smprate_ena));
+
+                    // gss (52-61)
+                    ushort gssBase = 2356;
+                    ushort[] gss_cfgRev = ModbusFunctionsHelper.ConvertUintToUshortArray(
+                        UInt32.Parse(string.IsNullOrEmpty(netsValues_TextFormat.gss.cfgRev) ? "0" : netsValues_TextFormat.gss.cfgRev));
+                    Array.Reverse(gss_cfgRev);
+                    Master.WriteMultipleRegisters(0, gssBase, gss_cfgRev);
+                    ushort[] gss_dstMAC = ModbusFunctionsHelper.ConvertByteArrayToUShortArray(
+                        netsValues_TextFormat.gss.dstAddr.dstMAC ?? new byte[6], true);
+                    Master.WriteMultipleRegisters(0, (ushort)(gssBase + 2), gss_dstMAC);
+                    ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, (ushort)(gssBase + 5),
+                        Convert.ToUInt16(string.IsNullOrEmpty(netsValues_TextFormat.gss.dstAddr.appID) ? "0" : netsValues_TextFormat.gss.dstAddr.appID));
+                    ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, (ushort)(gssBase + 6),
+                        Convert.ToUInt16(string.IsNullOrEmpty(netsValues_TextFormat.gss.dstAddr.VID) ? "0" : netsValues_TextFormat.gss.dstAddr.VID));
+                    ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, (ushort)(gssBase + 7),
+                        Convert.ToUInt16(string.IsNullOrEmpty(netsValues_TextFormat.gss.dstAddr.Prio) ? "0" : netsValues_TextFormat.gss.dstAddr.Prio));
+                    ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, (ushort)(gssBase + 8),
+                        Convert.ToUInt16(string.IsNullOrEmpty(netsValues_TextFormat.gss.sml) ? "0" : netsValues_TextFormat.gss.sml));
+                    ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, (ushort)(gssBase + 9),
+                        Convert.ToUInt16(string.IsNullOrEmpty(netsValues_TextFormat.gss.brmode) ? "0" : netsValues_TextFormat.gss.brmode));
+                }
+            }
         }
 
         // Исправленный метод meas_Write в ModBusProfile.cs
@@ -721,45 +932,118 @@ namespace ModBusHelper
         {
             meas_TextFormat meas = GeneralSettingsValues_TextFormat.meas;
             ushort addr = 3584;
-            ushort primctaddr = 3584;
 
-            // Inom1
-            ushort Inom1 = Convert.ToUInt16(meas.primct.Inom1 ?? "0");
-            ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, primctaddr, Inom1);
+            // Inom1 (W) – номинальный первичный ток (А)
+            ushort Inom1 = Convert.ToUInt16(string.IsNullOrEmpty(meas.primct.Inom1) ? "0" : meas.primct.Inom1);
+            ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, (ushort)(addr + 0), Inom1);
 
-            // Inom2
-            ushort Inom2 = Convert.ToUInt16(meas.primct.Inom2 ?? "0");
-            ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, (ushort)(primctaddr + 1), Inom2);
+            // Inom2 (D) – номинальный вторичный ток (мА)
+            ushort Inom2 = Convert.ToUInt16(string.IsNullOrEmpty(meas.primct.Inom2) ? "0" : meas.primct.Inom2);
+            ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, (ushort)(addr + 1), Inom2);
 
-            // label – используем CP1251
+            // label (W) – строка CP1251, 4 регистра
             ushort[] label = ModbusFunctionsHelper.ConvertStringToUshortArray(meas.primct.label ?? "", 8);
-            Master.WriteMultipleRegisters(0, (ushort)(primctaddr + 2), label);
+            Master.WriteMultipleRegisters(0, (ushort)(addr + 2), label);
 
-            // sscle
-            ushort sscle = Convert.ToUInt16(meas.sscle ?? "0");
+            // Rsh (D) – сопротивление шунта (Ом), float
+            float rshVal = float.Parse(string.IsNullOrEmpty(meas.Rsh) ? "0" : meas.Rsh, CultureInfo.InvariantCulture);
+            ushort[] Rsh = ModbusFunctionsHelper.ConvertFloatToUshortArray(rshVal);
+            Array.Reverse(Rsh);
+            Master.WriteMultipleRegisters(0, (ushort)(addr + 6), Rsh);
+
+            // sscle (W) – масштабный коэффициент тока в SV потоке
+            ushort sscle = Convert.ToUInt16(string.IsNullOrEmpty(meas.sscle) ? "0" : meas.sscle);
             ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, (ushort)(addr + 8), sscle);
 
-            // aStart / aStop
-            byte aStart = Convert.ToByte(meas.aStart ?? "0");
-            byte aStop = Convert.ToByte(meas.aStop ?? "0");
+            // Nturns (D) – количество витков
+            ushort Nturns = Convert.ToUInt16(string.IsNullOrEmpty(meas.Nturns) ? "0" : meas.Nturns);
+            ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, (ushort)(addr + 9), Nturns);
+
+            // adcrng (D) – предел АЦП (5 или 10 В)
+            ushort adcrng = Convert.ToUInt16(string.IsNullOrEmpty(meas.adcrng) ? "0" : meas.adcrng);
+            ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, (ushort)(addr + 10), adcrng);
+
+            // aStart / aStop (W) – упакованы в один регистр
+            byte aStart = Convert.ToByte(string.IsNullOrEmpty(meas.aStart) ? "0" : meas.aStart);
+            byte aStop = Convert.ToByte(string.IsNullOrEmpty(meas.aStop) ? "0" : meas.aStop);
             ushort ADCNumbers = BitConverter.ToUInt16(new byte[2] { aStart, aStop }, 0);
             ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, (ushort)(addr + 11), ADCNumbers);
 
+            // adc_osf (D) – AD7608 OSF
             if (AdminRights)
             {
-                // Rsh
-                float rshVal = float.Parse(meas.Rsh ?? "0", CultureInfo.InvariantCulture);
-                ushort[] Rsh = ModbusFunctionsHelper.ConvertFloatToUshortArray(rshVal);
-                Array.Reverse(Rsh);
-                Master.WriteMultipleRegisters(0, (ushort)(addr + 6), Rsh);
+                ushort[] adc_osf = ModbusFunctionsHelper.ConvertUintToUshortArray(
+                    UInt32.Parse(string.IsNullOrEmpty(meas.adc_osf) ? "0" : meas.adc_osf));
+                Array.Reverse(adc_osf);
+                Master.WriteMultipleRegisters(0, (ushort)(addr + 12), adc_osf);
+            }
 
-                // Nturns
-                ushort Nturns = Convert.ToUInt16(meas.Nturns ?? "0");
-                ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, (ushort)(addr + 9), Nturns);
+            // verif.next_verif (D) – дата следующей поверки (Unix timestamp)
+            if (AdminRights)
+            {
+                string nextVerifStr = meas.verif.next_verif; // структура verif_TextFormat существует всегда
+                ushort[] next_verif = ModbusFunctionsHelper.ConvertUintToUshortArray(
+                    UInt32.Parse(string.IsNullOrEmpty(nextVerifStr) ? "0" : nextVerifStr));
+                Array.Reverse(next_verif);
+                Master.WriteMultipleRegisters(0, (ushort)(addr + 14), next_verif);
+            }
+            // verif.verif_st – только чтение, не записываем
 
-                // adcrng
-                ushort adcrng = Convert.ToUInt16(meas.adcrng ?? "0");
-                ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, (ushort)(addr + 10), adcrng);
+            // qb (все поля D) – записываем только при AdminRights.
+            // Структура qb_TextFormat всегда существует (не может быть null), поэтому просто проверяем AdminRights.
+            if (AdminRights)
+            {
+                ushort method_oor = Convert.ToUInt16(string.IsNullOrEmpty(meas.qb.method_oor) ? "0" : meas.qb.method_oor);
+                ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, (ushort)(addr + 17), method_oor);
+
+                float out_of_range_f = float.Parse(string.IsNullOrEmpty(meas.qb.out_of_range) ? "0" : meas.qb.out_of_range, CultureInfo.InvariantCulture);
+                ushort[] out_of_range = ModbusFunctionsHelper.ConvertFloatToUshortArray(out_of_range_f);
+                Array.Reverse(out_of_range);
+                Master.WriteMultipleRegisters(0, (ushort)(addr + 18), out_of_range);
+
+                ushort repl_smps_od = Convert.ToUInt16(string.IsNullOrEmpty(meas.qb.repl_smps_od) ? "0" : meas.qb.repl_smps_od);
+                ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, (ushort)(addr + 20), repl_smps_od);
+
+                float delta_od_f = float.Parse(string.IsNullOrEmpty(meas.qb.delta_od) ? "0" : meas.qb.delta_od, CultureInfo.InvariantCulture);
+                ushort[] delta_od = ModbusFunctionsHelper.ConvertFloatToUshortArray(delta_od_f);
+                Array.Reverse(delta_od);
+                Master.WriteMultipleRegisters(0, (ushort)(addr + 21), delta_od);
+
+                float min_lev_od_f = float.Parse(string.IsNullOrEmpty(meas.qb.min_lev_od) ? "0" : meas.qb.min_lev_od, CultureInfo.InvariantCulture);
+                ushort[] min_lev_od = ModbusFunctionsHelper.ConvertFloatToUshortArray(min_lev_od_f);
+                Array.Reverse(min_lev_od);
+                Master.WriteMultipleRegisters(0, (ushort)(addr + 23), min_lev_od);
+
+                ushort repl_smps_osc = Convert.ToUInt16(string.IsNullOrEmpty(meas.qb.repl_smps_osc) ? "0" : meas.qb.repl_smps_osc);
+                ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, (ushort)(addr + 25), repl_smps_osc);
+
+                float delta_osc_f = float.Parse(string.IsNullOrEmpty(meas.qb.delta_osc) ? "0" : meas.qb.delta_osc, CultureInfo.InvariantCulture);
+                ushort[] delta_osc = ModbusFunctionsHelper.ConvertFloatToUshortArray(delta_osc_f);
+                Array.Reverse(delta_osc);
+                Master.WriteMultipleRegisters(0, (ushort)(addr + 26), delta_osc);
+
+                float min_lev_osc_f = float.Parse(string.IsNullOrEmpty(meas.qb.min_lev_osc) ? "0" : meas.qb.min_lev_osc, CultureInfo.InvariantCulture);
+                ushort[] min_lev_osc = ModbusFunctionsHelper.ConvertFloatToUshortArray(min_lev_osc_f);
+                Array.Reverse(min_lev_osc);
+                Master.WriteMultipleRegisters(0, (ushort)(addr + 28), min_lev_osc);
+
+                float imbal_lev_f = float.Parse(string.IsNullOrEmpty(meas.qb.imbal_lev) ? "0" : meas.qb.imbal_lev, CultureInfo.InvariantCulture);
+                ushort[] imbal_lev = ModbusFunctionsHelper.ConvertFloatToUshortArray(imbal_lev_f);
+                Array.Reverse(imbal_lev);
+                Master.WriteMultipleRegisters(0, (ushort)(addr + 30), imbal_lev);
+
+                ushort qb_mod = Convert.ToUInt16(string.IsNullOrEmpty(meas.qb.qb_mod) ? "0" : meas.qb.qb_mod);
+                ModbusFunctionsHelper.WriteSingleRegisterThroughLimitation(Master, (ushort)(addr + 32), qb_mod);
+
+                // qb_msk – массив из 4-х ushort (по числу каналов)
+                List<ushort> mskList = new List<ushort>();
+                if (meas.qb.qb_msk != null)
+                {
+                    foreach (string s in meas.qb.qb_msk)
+                        mskList.Add(string.IsNullOrEmpty(s) ? (ushort)0 : Convert.ToUInt16(s));
+                }
+                while (mskList.Count < 4) mskList.Add(0);
+                Master.WriteMultipleRegisters(0, (ushort)(addr + 33), mskList.ToArray());
             }
         }
 
